@@ -1,0 +1,21 @@
+insert into user_roles (role_id, role_name) values (1, 'Software Engineer');
+insert into user_roles (role_id, role_name) values (2, 'HR Manager');
+insert into user_roles (role_id, role_name) values (3, 'Product Manager');
+insert into user_roles (role_id, role_name) values (4, 'Design Lead');
+insert into user_roles (role_id, role_name) values (5, 'Sales Executive');
+insert into user_roles (role_id, role_name) values (6, 'Customer Support');
+insert into user_roles (role_id, role_name) values (7, 'Marketing Specialist');
+insert into user_roles (role_id, role_name) values (8, 'DevOps Engineer');
+insert into user_roles (role_id, role_name) values (9, 'Data Analyst');
+insert into user_roles (role_id, role_name) values (10, 'Finance Officer');
+
+insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (1, 'Sarah', 'Johnson', 'sarah.johnson@company.com', '2023-01-15', 1, 'Experienced software engineer with a passion for developing innovative programs.');
+insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (2, 'Michael', 'Chen', 'michael.chen@company.com', '2023-02-20', 2, 'HR manager with a strong background in employee relations and talent acquisition.');
+insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (3, 'Emily', 'Smith', 'emily.smith@company.com', '2023-03-10', 3, 'Product manager with expertise in leading cross-functional teams to deliver innovative products.');
+insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (4, 'James', 'Brown', 'james.brown@company.com', '2023-01-25', 4, 'Creative design lead with a proven track record in brand development and digital media.');
+insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (5, 'Linda', 'Davis', 'linda.davis@company.com', '2023-04-05', 5, 'Sales executive with a passion for building lasting client relationships and exceeding sales targets.');
+insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (6, 'John', 'Wilson', 'john.wilson@company.com', '2023-02-15', 6, 'Customer support specialist with a focus on enhancing customer satisfaction and retention.');
+insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (7, 'Barbara', 'Taylor', 'barbara.taylor@company.com', '2023-03-20', 7, 'Marketing specialist with a knack for crafting compelling campaigns that drive engagement.');
+insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (8, 'Robert', 'Anderson', 'robert.anderson@company.com', '2023-04-10', 8, 'DevOps engineer with expertise in cloud services and automation.');
+insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (9, 'Patricia', 'Martinez', 'patricia.martinez@company.com', '2023-01-30', 9, 'Data analyst with a strong analytical mind and a passion for data-driven decision making.');
+insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (10, 'Charles', 'Hernandez', 'charles.hernandez@company.com', '2023-02-25', 10, 'Finance officer with a solid background in corporate finance and financial planning.');
