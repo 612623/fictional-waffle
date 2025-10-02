@@ -1,36 +1,165 @@
-INSERT INTO user_roles (role_id, role_name) VALUES (1, 'Software Engineer');
-INSERT INTO user_roles (role_id, role_name) VALUES (2, 'HR Manager');
-INSERT INTO user_roles (role_id, role_name) VALUES (3, 'Project Manager');
-INSERT INTO user_roles (role_id, role_name) VALUES (4, 'Product Owner');
-INSERT INTO user_roles (role_id, role_name) VALUES (5, 'Data Analyst');
-INSERT INTO user_roles (role_id, role_name) VALUES (6, 'Designer');
-INSERT INTO user_roles (role_id, role_name) VALUES (7, 'QA Engineer');
-INSERT INTO user_roles (role_id, role_name) VALUES (8, 'Marketing Specialist');
-INSERT INTO user_roles (role_id, role_name) VALUES (9, 'Sales Representative');
-INSERT INTO user_roles (role_id, role_name) VALUES (10, 'Customer Support');
+INSERT INTO user_roles (role_id, role_name) VALUES
+(1, 'Software Engineer'),
+(2, 'HR Manager'),
+(3, 'Product Manager'),
+(4, 'Designer'),
+(5, 'Data Analyst'),
+(6, 'Marketing Specialist'),
+(7, 'Sales Representative'),
+(8, 'Technical Support'),
+(9, 'Finance Manager'),
+(10, 'Operations Manager');
 
-INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (1, 'John', 'Doe', 'john.doe@company.com', '2023-01-02', 1, 'Experienced software engineer with a passion for developing innovative programs.');
-INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (2, 'Jane', 'Smith', 'jane.smith@company.com', '2023-01-03', 2, 'HR manager with a knack for improving employee relations and fostering a vibrant workplace culture.');
-INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (3, 'Alice', 'Brown', 'alice.brown@company.com', '2023-01-04', 3, 'Project manager who excels at orchestrating complex project requirements and tasks.');
-INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (4, 'Robert', 'Johnson', 'robert.johnson@company.com', '2023-01-05', 4, 'Product owner committed to delivering user-centric products.');
-INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (5, 'Emily', 'Davis', 'emily.davis@company.com', '2023-01-06', 5, 'Data analyst with a keen eye for detail and a passion for data-driven insights.');
-INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (6, 'Michael', 'Wilson', 'michael.wilson@company.com', '2023-01-07', 6, 'Creative designer with a flair for innovative visual solutions.');
-INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (7, 'Sarah', 'Moore', 'sarah.moore@company.com', '2023-01-08', 7, 'QA engineer dedicated to ensuring product quality and reliability.');
-INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (8, 'David', 'Taylor', 'david.taylor@company.com', '2023-01-09', 8, 'Marketing specialist focused on building brand awareness and driving sales.');
-INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (9, 'Laura', 'Anderson', 'laura.anderson@company.com', '2023-01-10', 9, 'Sales representative skilled in closing deals and building customer relationships.');
-INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (10, 'James', 'Thomas', 'james.thomas@company.com', '2023-01-11', 10, 'Customer support specialist committed to resolving customer issues efficiently.');
+INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES
+(1, 'John', 'Doe', 'john.doe@company.com', '2023-01-15', 1, 'A passionate software engineer.'),
+(2, 'Jane', 'Smith', 'jane.smith@company.com', '2023-02-01', 2, 'Experienced HR manager.'),
+(3, 'Emily', 'Johnson', 'emily.johnson@company.com', '2023-03-10', 3, 'Product manager with a focus on innovation.'),
+(4, 'Michael', 'Brown', 'michael.brown@company.com', '2023-04-20', 4, 'Creative designer with a knack for aesthetics.'),
+(5, 'Jessica', 'Williams', 'jessica.williams@company.com', '2023-05-05', 5, 'Data analyst who loves numbers.'),
+(6, 'David', 'Jones', 'david.jones@company.com', '2023-06-15', 6, 'Marketing specialist with creative strategies.'),
+(7, 'Sarah', 'Miller', 'sarah.miller@company.com', '2023-07-20', 7, 'Sales representative with excellent communication.'),
+(8, 'Daniel', 'Davis', 'daniel.davis@company.com', '2023-08-25', 8, 'Technical support expert.'),
+(9, 'Laura', 'Garcia', 'laura.garcia@company.com', '2023-09-05', 9, 'Finance manager with a keen eye for detail.'),
+(10, 'James', 'Martinez', 'james.martinez@company.com', '2023-10-10', 10, 'Operations manager with efficient processes.'),
+(11, 'Sophia', 'Lopez', 'sophia.lopez@company.com', '2023-01-18', 1, 'Software engineer focused on backend.'),
+(12, 'Oliver', 'Wilson', 'oliver.wilson@company.com', '2023-02-05', 2, 'HR manager passionate about employee engagement.'),
+(13, 'Isabella', 'Anderson', 'isabella.anderson@company.com', '2023-03-12', 3, 'Product manager with a user-centric approach.'),
+(14, 'Ethan', 'Thomas', 'ethan.thomas@company.com', '2023-04-22', 4, 'Designer with a focus on user experience.'),
+(15, 'Mia', 'Taylor', 'mia.taylor@company.com', '2023-05-08', 5, 'Data analyst with strong statistical skills.'),
+(16, 'Lucas', 'Moore', 'lucas.moore@company.com', '2023-06-18', 6, 'Marketing specialist with digital expertise.'),
+(17, 'Amelia', 'Jackson', 'amelia.jackson@company.com', '2023-07-22', 7, 'Sales representative with a customer-first approach.'),
+(18, 'Mason', 'Martin', 'mason.martin@company.com', '2023-08-28', 8, 'Technical support specialist with problem-solving skills.'),
+(19, 'Charlotte', 'Lee', 'charlotte.lee@company.com', '2023-09-08', 9, 'Finance manager with strategic thinking.'),
+(20, 'Elijah', 'Perez', 'elijah.perez@company.com', '2023-10-15', 10, 'Operations manager focused on efficiency.'),
+(21, 'Ava', 'White', 'ava.white@company.com', '2023-01-22', 1, 'Software engineer specializing in frontend.'),
+(22, 'William', 'Harris', 'william.harris@company.com', '2023-02-10', 2, 'HR manager with a focus on recruitment.'),
+(23, 'Sophia', 'Clark', 'sophia.clark@company.com', '2023-03-15', 3, 'Product manager with a tech-savvy approach.'),
+(24, 'Logan', 'Lewis', 'logan.lewis@company.com', '2023-04-25', 4, 'Designer with a love for graphic design.'),
+(25, 'Aiden', 'Walker', 'aiden.walker@company.com', '2023-05-12', 5, 'Data analyst with a focus on predictive analytics.'),
+(26, 'Harper', 'Hall', 'harper.hall@company.com', '2023-06-20', 6, 'Marketing specialist with a focus on branding.'),
+(27, 'Alexander', 'Young', 'alexander.young@company.com', '2023-07-25', 7, 'Sales representative with a focus on B2B sales.'),
+(28, 'Liam', 'King', 'liam.king@company.com', '2023-08-30', 8, 'Technical support with a focus on software issues.'),
+(29, 'Abigail', 'Wright', 'abigail.wright@company.com', '2023-09-10', 9, 'Finance manager with a strong accounting background.'),
+(30, 'Matthew', 'Scott', 'matthew.scott@company.com', '2023-10-18', 10, 'Operations manager with a focus on logistics.'),
+(31, 'Emma', 'Green', 'emma.green@company.com', '2023-01-25', 1, 'Software engineer with a passion for code.'),
+(32, 'Jayden', 'Baker', 'jayden.baker@company.com', '2023-02-15', 2, 'HR manager focused on employee retention.'),
+(33, 'Chloe', 'Adams', 'chloe.adams@company.com', '2023-03-18', 3, 'Product manager with agile methodology expertise.'),
+(34, 'Noah', 'Nelson', 'noah.nelson@company.com', '2023-04-28', 4, 'Designer with a strong portfolio.'),
+(35, 'Zoe', 'Carter', 'zoe.carter@company.com', '2023-05-15', 5, 'Data analyst with expertise in big data.'),
+(36, 'Lily', 'Mitchell', 'lily.mitchell@company.com', '2023-06-25', 6, 'Marketing specialist with a focus on social media.'),
+(37, 'Landon', 'Perez', 'landon.perez@company.com', '2023-07-28', 7, 'Sales representative with a focus on consumer sales.'),
+(38, 'Evelyn', 'Roberts', 'evelyn.roberts@company.com', '2023-08-31', 8, 'Technical support with a focus on hardware issues.'),
+(39, 'Samuel', 'Turner', 'samuel.turner@company.com', '2023-09-12', 9, 'Finance manager with financial analysis skills.'),
+(40, 'Grace', 'Phillips', 'grace.phillips@company.com', '2023-10-20', 10, 'Operations manager with project management expertise.'),
+(41, 'Avery', 'Campbell', 'avery.campbell@company.com', '2023-01-28', 1, 'Software engineer with a focus on security.'),
+(42, 'Jack', 'Parker', 'jack.parker@company.com', '2023-02-18', 2, 'HR manager with a focus on training and development.'),
+(43, 'Ella', 'Evans', 'ella.evans@company.com', '2023-03-20', 3, 'Product manager focused on customer satisfaction.'),
+(44, 'Jackson', 'Edwards', 'jackson.edwards@company.com', '2023-04-30', 4, 'Designer with an eye for detail.'),
+(45, 'Madison', 'Collins', 'madison.collins@company.com', '2023-05-18', 5, 'Data analyst with a strong research background.'),
+(46, 'Scarlett', 'Stewart', 'scarlett.stewart@company.com', '2023-06-28', 6, 'Marketing specialist with a focus on market research.'),
+(47, 'Henry', 'Sanchez', 'henry.sanchez@company.com', '2023-07-30', 7, 'Sales representative with excellent negotiation skills.'),
+(48, 'Lila', 'Morris', 'lila.morris@company.com', '2023-09-01', 8, 'Technical support with a focus on network issues.'),
+(49, 'Sebastian', 'Rogers', 'sebastian.rogers@company.com', '2023-09-15', 9, 'Finance manager with strategic planning expertise.'),
+(50, 'Hannah', 'Reed', 'hannah.reed@company.com', '2023-10-22', 10, 'Operations manager with a focus on process improvement.');
 
--- Additional 40 users to follow the pattern (ensure unique emails and hire dates)
-
-INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (1, 'Complete I-9 Form', '2023-02-01');
-INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (1, 'Setup Workstation', '2023-02-02');
-INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (1, 'Attend Security Training', '2023-02-03');
-INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (1, 'Submit Code of Conduct Acknowledgment', '2023-02-04');
-INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (1, 'Complete Benefits Enrollment', '2023-02-05');
-INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (2, 'Review Company Policies', '2023-02-01');
-INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (2, 'Conduct New Hire Orientation', '2023-02-02');
-INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (2, 'Set Up Employee Files', '2023-02-03');
-INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (2, 'Monitor Compliance Training', '2023-02-04');
-INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (2, 'Facilitate Team Introductions', '2023-02-05');
-
--- Additional tasks for other roles following the pattern, ensuring unique task descriptions and timelines
+INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES
+(1, 'Complete Code of Conduct Training', '2023-11-01'),
+(1, 'Submit Equipment Request Form', '2023-11-05'),
+(1, 'Setup Development Environment', '2023-11-10'),
+(1, 'Attend Team Orientation', '2023-11-15'),
+(1, 'Complete Security Awareness Training', '2023-11-20'),
+(1, 'Meet with Mentor', '2023-11-22'),
+(1, 'Review Project Documentation', '2023-11-25'),
+(1, 'Complete Initial Code Review', '2023-11-30'),
+(1, 'Sign NDA and Compliance Documents', '2023-12-01'),
+(1, 'Submit Feedback on Onboarding', '2023-12-05'),
+(2, 'Complete Code of Conduct Training', '2023-11-01'),
+(2, 'Submit Equipment Request Form', '2023-11-05'),
+(2, 'Setup HRIS Account', '2023-11-10'),
+(2, 'Attend Team Orientation', '2023-11-15'),
+(2, 'Complete Security Awareness Training', '2023-11-20'),
+(2, 'Meet with Mentor', '2023-11-22'),
+(2, 'Review HR Policies', '2023-11-25'),
+(2, 'Complete Initial HR Review', '2023-11-30'),
+(2, 'Sign NDA and Compliance Documents', '2023-12-01'),
+(2, 'Submit Feedback on Onboarding', '2023-12-05'),
+(3, 'Complete Code of Conduct Training', '2023-11-01'),
+(3, 'Submit Equipment Request Form', '2023-11-05'),
+(3, 'Setup Product Management Tools', '2023-11-10'),
+(3, 'Attend Team Orientation', '2023-11-15'),
+(3, 'Complete Security Awareness Training', '2023-11-20'),
+(3, 'Meet with Mentor', '2023-11-22'),
+(3, 'Review Product Roadmap', '2023-11-25'),
+(3, 'Complete Initial Product Review', '2023-11-30'),
+(3, 'Sign NDA and Compliance Documents', '2023-12-01'),
+(3, 'Submit Feedback on Onboarding', '2023-12-05'),
+(4, 'Complete Code of Conduct Training', '2023-11-01'),
+(4, 'Submit Equipment Request Form', '2023-11-05'),
+(4, 'Setup Design Software', '2023-11-10'),
+(4, 'Attend Team Orientation', '2023-11-15'),
+(4, 'Complete Security Awareness Training', '2023-11-20'),
+(4, 'Meet with Mentor', '2023-11-22'),
+(4, 'Review Design Guidelines', '2023-11-25'),
+(4, 'Complete Initial Design Review', '2023-11-30'),
+(4, 'Sign NDA and Compliance Documents', '2023-12-01'),
+(4, 'Submit Feedback on Onboarding', '2023-12-05'),
+(5, 'Complete Code of Conduct Training', '2023-11-01'),
+(5, 'Submit Equipment Request Form', '2023-11-05'),
+(5, 'Setup Data Analysis Tools', '2023-11-10'),
+(5, 'Attend Team Orientation', '2023-11-15'),
+(5, 'Complete Security Awareness Training', '2023-11-20'),
+(5, 'Meet with Mentor', '2023-11-22'),
+(5, 'Review Data Sources', '2023-11-25'),
+(5, 'Complete Initial Data Analysis', '2023-11-30'),
+(5, 'Sign NDA and Compliance Documents', '2023-12-01'),
+(5, 'Submit Feedback on Onboarding', '2023-12-05'),
+(6, 'Complete Code of Conduct Training', '2023-11-01'),
+(6, 'Submit Equipment Request Form', '2023-11-05'),
+(6, 'Setup Marketing Tools', '2023-11-10'),
+(6, 'Attend Team Orientation', '2023-11-15'),
+(6, 'Complete Security Awareness Training', '2023-11-20'),
+(6, 'Meet with Mentor', '2023-11-22'),
+(6, 'Review Marketing Strategies', '2023-11-25'),
+(6, 'Complete Initial Campaign Review', '2023-11-30'),
+(6, 'Sign NDA and Compliance Documents', '2023-12-01'),
+(6, 'Submit Feedback on Onboarding', '2023-12-05'),
+(7, 'Complete Code of Conduct Training', '2023-11-01'),
+(7, 'Submit Equipment Request Form', '2023-11-05'),
+(7, 'Setup Sales Tools', '2023-11-10'),
+(7, 'Attend Team Orientation', '2023-11-15'),
+(7, 'Complete Security Awareness Training', '2023-11-20'),
+(7, 'Meet with Mentor', '2023-11-22'),
+(7, 'Review Sales Processes', '2023-11-25'),
+(7, 'Complete Initial Sales Training', '2023-11-30'),
+(7, 'Sign NDA and Compliance Documents', '2023-12-01'),
+(7, 'Submit Feedback on Onboarding', '2023-12-05'),
+(8, 'Complete Code of Conduct Training', '2023-11-01'),
+(8, 'Submit Equipment Request Form', '2023-11-05'),
+(8, 'Setup Support Systems', '2023-11-10'),
+(8, 'Attend Team Orientation', '2023-11-15'),
+(8, 'Complete Security Awareness Training', '2023-11-20'),
+(8, 'Meet with Mentor', '2023-11-22'),
+(8, 'Review Support Protocols', '2023-11-25'),
+(8, 'Complete Initial Support Training', '2023-11-30'),
+(8, 'Sign NDA and Compliance Documents', '2023-12-01'),
+(8, 'Submit Feedback on Onboarding', '2023-12-05'),
+(9, 'Complete Code of Conduct Training', '2023-11-01'),
+(9, 'Submit Equipment Request Form', '2023-11-05'),
+(9, 'Setup Finance Systems', '2023-11-10'),
+(9, 'Attend Team Orientation', '2023-11-15'),
+(9, 'Complete Security Awareness Training', '2023-11-20'),
+(9, 'Meet with Mentor', '2023-11-22'),
+(9, 'Review Financial Guidelines', '2023-11-25'),
+(9, 'Complete Initial Finance Review', '2023-11-30'),
+(9, 'Sign NDA and Compliance Documents', '2023-12-01'),
+(9, 'Submit Feedback on Onboarding', '2023-12-05'),
+(10, 'Complete Code of Conduct Training', '2023-11-01'),
+(10, 'Submit Equipment Request Form', '2023-11-05'),
+(10, 'Setup Operations Systems', '2023-11-10'),
+(10, 'Attend Team Orientation', '2023-11-15'),
+(10, 'Complete Security Awareness Training', '2023-11-20'),
+(10, 'Meet with Mentor', '2023-11-22'),
+(10, 'Review Operational Procedures', '2023-11-25'),
+(10, 'Complete Initial Operations Review', '2023-11-30'),
+(10, 'Sign NDA and Compliance Documents', '2023-12-01'),
+(10, 'Submit Feedback on Onboarding', '2023-12-05');
