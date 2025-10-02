@@ -28,6 +28,7 @@ const api = {
   },
 
   async createUser(userData) {
+    console.log('Creating user with data:', userData);
     const response = await fetch(`${API_BASE_URL}/users/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -35,7 +36,8 @@ const api = {
     });
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.detail || 'Failed to create user');
+      console.error('Create user error:', errorData);
+      throw new Error(JSON.stringify(errorData.detail || errorData) || 'Failed to create user');
     }
     return await response.json();
   },
@@ -67,12 +69,450 @@ const api = {
 
 // ---- Utility SVGs ----
 const WaffleButtonIcon = () => (
-  <img src="/waffle_button4.png" alt="Open Role Menu" className="w-8 h-8" />
+  <img src="/waffle_button4.png" alt="Role Selector" className="w-8 h-8" />
 );
 
 const WaffleLogo = () => (
   <img src="/waffle_logo.png" alt="WaffleTech Industries Logo" className="h-12 w-auto" />
 );
+
+// ---- Role Selector Widget ----
+function RoleSelector({ roles, selectedRole, onRoleChange }) {
+  const handleClick = () => {
+    if (roles.length === 0) return;
+    
+    const currentIndex = selectedRole ? roles.findIndex(r => r.role_id === selectedRole.role_id) : -1;
+    const nextIndex = (currentIndex + 1) % roles.length;
+    onRoleChange(roles[nextIndex]);
+  };
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className="text-right">
+        <div className="text-sm font-medium text-gray-700">
+          {selectedRole ? selectedRole.role_name : 'Select Role'}
+        </div>
+        <div className="text-xs text-gray-400">
+          Click to cycle
+        </div>
+      </div>
+      <button
+        onClick={handleClick}
+        className="p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+        aria-label={`Current role: ${selectedRole?.role_name || 'None'}. Click to cycle through roles.`}
+        disabled={roles.length === 0}
+      >
+        <WaffleButtonIcon />
+      </button>
+    </div>
+  );
+}
+
+// ---- Role-Based Content Display ----
+function RoleBasedContent({ selectedRole }) {
+  const getRoleContent = (role) => {
+    if (!role) {
+      return {
+        title: "Welcome to Waffle Suite",
+        description: "Select a role using the waffle button in the top right to see specific training and resources.",
+        training: [],
+        tasks: [],
+        resources: []
+      };
+    }
+
+    const roleContentMap = {
+      "Software Engineer": {
+        title: "Software Engineering Onboarding",
+        description: "Welcome to the engineering team! Here's everything you need to get started with our development processes and coding standards.",
+        training: [
+          "Programming Languages & Frameworks",
+          "Code Review Process Training",
+          "Git Version Control & Best Practices", 
+          "Software Architecture Patterns",
+          "Testing & Debugging Techniques",
+          "API Design & Documentation"
+        ],
+        tasks: [
+          "Set up development environment",
+          "Complete first code review",
+          "Write unit tests for assigned module",
+          "Deploy a feature to staging environment",
+          "Participate in architecture review meeting",
+          "Complete security coding guidelines training"
+        ],
+        resources: [
+          { name: "Engineering Handbook", link: "/resources/eng-handbook.pdf" },
+          { name: "Codebase Overview", link: "/resources/engineer-codebase.pdf" },
+          { name: "API Documentation", link: "/docs/api" },
+          { name: "Development Tools Guide", link: "/resources/dev-tools.pdf" },
+          { name: "Coding Standards", link: "/resources/coding-standards.pdf" }
+        ]
+      },
+      "HR Manager": {
+        title: "Human Resources Management Onboarding", 
+        description: "Welcome to the HR team! Learn about our people processes, policies, and employee management systems.",
+        training: [
+          "HRIS System Administration",
+          "Employment Law & Compliance",
+          "Recruitment & Talent Acquisition",
+          "Performance Management Systems",
+          "Benefits Administration",
+          "Employee Relations & Conflict Resolution"
+        ],
+        tasks: [
+          "Complete HRIS system certification",
+          "Review current employee policies",
+          "Conduct first employee interview",
+          "Set up onboarding process for new hire",
+          "Review performance evaluation procedures",
+          "Update employee handbook sections"
+        ],
+        resources: [
+          { name: "HR Policy Manual", link: "/resources/hr-policies.pdf" },
+          { name: "HRIS Admin Guide", link: "/resources/hris-admin.pdf" },
+          { name: "Legal Compliance Checklist", link: "/resources/legal-compliance.pdf" },
+          { name: "Recruitment Templates", link: "/resources/recruitment-templates.pdf" },
+          { name: "Performance Review Forms", link: "/resources/performance-forms.pdf" }
+        ]
+      },
+      "Project Manager": {
+        title: "Project Management Onboarding",
+        description: "Welcome to project management! Learn our methodologies, tools, and processes for successful project delivery.",
+        training: [
+          "Agile & Scrum Methodologies",
+          "Project Planning & Scheduling", 
+          "Risk Management & Mitigation",
+          "Stakeholder Communication",
+          "Budget & Resource Management",
+          "Quality Assurance Processes"
+        ],
+        tasks: [
+          "Create first project plan",
+          "Facilitate daily standup meeting",
+          "Set up project tracking dashboard",
+          "Conduct stakeholder requirements session",
+          "Complete risk assessment for assigned project",
+          "Review and approve project deliverables"
+        ],
+        resources: [
+          { name: "Project Management Handbook", link: "/resources/pm-handbook.pdf" },
+          { name: "Agile Best Practices", link: "/resources/agile-practices.pdf" },
+          { name: "Project Templates", link: "/resources/project-templates.xlsx" },
+          { name: "Risk Management Guide", link: "/resources/risk-management.pdf" },
+          { name: "Stakeholder Communication Plan", link: "/resources/communication-plan.pdf" }
+        ]
+      },
+      "Product Owner": {
+        title: "Product Owner Onboarding",
+        description: "Welcome to product ownership! Learn how to define product vision, manage backlogs, and deliver user value.",
+        training: [
+          "Product Strategy & Vision",
+          "User Story Writing & Acceptance Criteria",
+          "Backlog Management & Prioritization",
+          "User Research & Analytics",
+          "Stakeholder Management",
+          "Product Roadmap Planning"
+        ],
+        tasks: [
+          "Define product vision statement",
+          "Create and prioritize product backlog",
+          "Write first set of user stories",
+          "Conduct user research session",
+          "Review product analytics dashboard",
+          "Present product roadmap to stakeholders"
+        ],
+        resources: [
+          { name: "Product Owner Guide", link: "/resources/product-owner-guide.pdf" },
+          { name: "User Story Templates", link: "/resources/user-story-templates.pdf" },
+          { name: "Analytics Dashboard Guide", link: "/resources/analytics-guide.pdf" },
+          { name: "Product Roadmap Template", link: "/resources/roadmap-template.xlsx" },
+          { name: "User Research Methods", link: "/resources/user-research.pdf" }
+        ]
+      },
+      "Data Analyst": {
+        title: "Data Analysis Onboarding",
+        description: "Welcome to data analysis! Learn our data tools, analysis methods, and reporting standards.",
+        training: [
+          "SQL & Database Querying",
+          "Data Visualization Tools",
+          "Statistical Analysis Methods",
+          "Business Intelligence Platforms",
+          "Data Quality & Validation",
+          "Report Writing & Presentation"
+        ],
+        tasks: [
+          "Complete first data analysis project",
+          "Create dashboard for key metrics",
+          "Write SQL queries for business requirements",
+          "Present findings to stakeholders",
+          "Validate data quality in key datasets",
+          "Set up automated reporting process"
+        ],
+        resources: [
+          { name: "Data Analysis Handbook", link: "/resources/data-analysis-guide.pdf" },
+          { name: "SQL Reference Guide", link: "/resources/sql-reference.pdf" },
+          { name: "Visualization Best Practices", link: "/resources/viz-best-practices.pdf" },
+          { name: "BI Tools Documentation", link: "/resources/bi-tools.pdf" },
+          { name: "Statistical Methods Guide", link: "/resources/statistical-methods.pdf" }
+        ]
+      },
+      "Designer": {
+        title: "🧇 Waffle Design Studio Onboarding",
+        description: "Welcome to the Waffle Design team! Dive into our sweet, grid-based design philosophy and create deliciously beautiful experiences.",
+        training: [
+          "Waffle Grid Design Principles",
+          "Golden-Brown Color Theory", 
+          "Syrup Flow & User Experience",
+          "Crispy Typography Standards",
+          "Stack & Layer Design Systems"
+        ],
+        tasks: [
+          "Design your first waffle-grid layout",
+          "Create a syrup-smooth user journey",
+          "Stack design components like perfect layers",
+          "Add that golden-brown finishing touch",
+          "Present your crispy-fresh design concepts"
+        ],
+        resources: [
+          { name: "🧇 Waffle Design System Guide", link: "/resources/waffle-design-system.pdf" },
+          { name: "🍯 Brand Syrup Guidelines", link: "/resources/waffle-brand-guide.pdf" },
+          { name: "📐 Grid Pattern Library", link: "/resources/waffle-grids.pdf" },
+          { name: "🎨 Golden Color Palette", link: "/resources/waffle-colors.pdf" }
+        ]
+      },
+      "QA Engineer": {
+        title: "Quality Assurance Engineering Onboarding",
+        description: "Welcome to QA! Learn our testing methodologies, tools, and quality standards to ensure excellent software delivery.",
+        training: [
+          "Manual Testing Techniques",
+          "Automated Testing Frameworks",
+          "Bug Tracking & Reporting",
+          "Test Case Design & Management",
+          "Performance & Load Testing",
+          "Security Testing Fundamentals"
+        ],
+        tasks: [
+          "Execute test cases for assigned feature",
+          "Set up automated test suite",
+          "Report and track bugs in system",
+          "Create comprehensive test plan",
+          "Perform regression testing",
+          "Review code for quality standards"
+        ],
+        resources: [
+          { name: "QA Testing Handbook", link: "/resources/qa-handbook.pdf" },
+          { name: "Test Automation Guide", link: "/resources/test-automation.pdf" },
+          { name: "Bug Reporting Templates", link: "/resources/bug-templates.pdf" },
+          { name: "Testing Tools Reference", link: "/resources/testing-tools.pdf" },
+          { name: "Quality Standards Checklist", link: "/resources/quality-checklist.pdf" }
+        ]
+      },
+      "Marketing Specialist": {
+        title: "Marketing Specialist Onboarding",
+        description: "Welcome to marketing! Get familiar with our brand, campaigns, marketing tools, and customer engagement strategies.",
+        training: [
+          "Brand Guidelines & Messaging",
+          "Digital Marketing Strategies",
+          "Content Creation & Management", 
+          "Social Media Marketing",
+          "Email Campaign Management",
+          "Marketing Analytics & ROI"
+        ],
+        tasks: [
+          "Create first marketing campaign",
+          "Set up social media content calendar",
+          "Analyze marketing metrics dashboard",
+          "Design promotional materials",
+          "Write engaging blog content",
+          "Collaborate on lead generation strategy"
+        ],
+        resources: [
+          { name: "Brand Style Guide", link: "/resources/brand-guide.pdf" },
+          { name: "Marketing Playbook", link: "/resources/marketing-playbook.pdf" },
+          { name: "Content Creation Templates", link: "/resources/content-templates.pdf" },
+          { name: "Social Media Guidelines", link: "/resources/social-media-guide.pdf" },
+          { name: "Analytics Dashboard Guide", link: "/resources/marketing-analytics.pdf" }
+        ]
+      },
+      "Sales Representative": {
+        title: "Sales Representative Onboarding",
+        description: "Welcome to sales! Learn our sales process, customer relationship management, and techniques for building lasting client relationships.",
+        training: [
+          "Sales Process & Methodology",
+          "CRM System Training",
+          "Product Knowledge Deep-Dive",
+          "Customer Relationship Building",
+          "Negotiation Techniques",
+          "Sales Analytics & Forecasting"
+        ],
+        tasks: [
+          "Complete first customer call",
+          "Set up CRM for assigned territory",
+          "Prepare product demonstration",
+          "Follow up on qualified leads",
+          "Create sales forecast report",
+          "Attend client relationship meeting"
+        ],
+        resources: [
+          { name: "Sales Playbook", link: "/resources/sales-playbook.pdf" },
+          { name: "CRM User Guide", link: "/resources/crm-guide.pdf" },
+          { name: "Product Catalog", link: "/resources/product-catalog.pdf" },
+          { name: "Sales Scripts & Templates", link: "/resources/sales-scripts.pdf" },
+          { name: "Customer Objection Handling", link: "/resources/objection-handling.pdf" }
+        ]
+      },
+      "Customer Support": {
+        title: "Customer Support Onboarding",
+        description: "Welcome to customer support! Learn our support processes, tools, and best practices for delivering exceptional customer service.",
+        training: [
+          "Customer Service Excellence",
+          "Support Ticket System Training",
+          "Product Troubleshooting",
+          "Communication & De-escalation",
+          "Knowledge Base Management",
+          "Customer Satisfaction Metrics"
+        ],
+        tasks: [
+          "Handle first customer support ticket",
+          "Complete product knowledge assessment",
+          "Set up support desk workspace",
+          "Practice call handling procedures",
+          "Update knowledge base articles",
+          "Review customer feedback reports"
+        ],
+        resources: [
+          { name: "Customer Support Handbook", link: "/resources/support-handbook.pdf" },
+          { name: "Troubleshooting Guide", link: "/resources/troubleshooting.pdf" },
+          { name: "Communication Scripts", link: "/resources/support-scripts.pdf" },
+          { name: "Knowledge Base Templates", link: "/resources/kb-templates.pdf" },
+          { name: "Customer Service Metrics", link: "/resources/service-metrics.pdf" }
+        ]
+      }
+    };
+
+    return roleContentMap[role.role_name] || {
+      title: `${role.role_name} Onboarding`,
+      description: `Welcome to the ${role.role_name} team! We're setting up your specific training materials.`,
+      training: [
+        "General Company Orientation",
+        "Role-specific Training (Coming Soon)",
+        "Team Introduction Session"
+      ],
+      tasks: [
+        "Complete general onboarding checklist",
+        "Meet with team members",
+        "Review role-specific documentation",
+        "Set up workspace and tools"
+      ],
+      resources: [
+        { name: "Employee Handbook", link: "/resources/employee-handbook.pdf" },
+        { name: "Company Overview", link: "/resources/company-overview.pdf" }
+      ]
+    };
+  };
+
+  const content = getRoleContent(selectedRole);
+  const isDesigner = selectedRole?.role_name === "Designer";
+
+  return (
+    <div className={`space-y-6 ${isDesigner ? 'waffle-designer-theme' : ''}`} style={isDesigner ? {
+      background: 'linear-gradient(45deg, #fef3c7 25%, #fbbf24 25%, #fbbf24 50%, #fef3c7 50%, #fef3c7 75%, #fbbf24 75%, #fbbf24)',
+      backgroundSize: '20px 20px',
+      borderRadius: '1rem',
+      padding: '2rem',
+      boxShadow: '0 10px 25px rgba(251, 191, 36, 0.3)'
+    } : {}}>
+      {/* Role Title and Description */}
+      <div className="text-center">
+        <h2 className={`text-3xl font-bold mb-3 ${isDesigner ? 'text-amber-900' : 'text-gray-900'}`}>{content.title}</h2>
+        <p className={`text-lg max-w-3xl mx-auto ${isDesigner ? 'text-amber-800' : 'text-gray-600'}`}>{content.description}</p>
+      </div>
+
+      {/* Training, Tasks and Resources Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+        {/* Training Section */}
+        <div className={`${isDesigner ? 'bg-amber-100 border-2 border-amber-300' : 'bg-blue-50'} rounded-xl p-6`}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`w-10 h-10 ${isDesigner ? 'bg-amber-600' : 'bg-blue-600'} rounded-lg flex items-center justify-center`}>
+              {isDesigner ? (
+                <span className="text-white text-xl">🧇</span>
+              ) : (
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              )}
+            </div>
+            <h3 className={`text-xl font-semibold ${isDesigner ? 'text-amber-900' : 'text-gray-900'}`}>Required Training</h3>
+          </div>
+          <ul className="space-y-3">
+            {content.training.map((item, index) => (
+              <li key={index} className="flex items-start gap-3">
+                <div className={`w-2 h-2 ${isDesigner ? 'bg-amber-600' : 'bg-blue-600'} rounded-full mt-2 flex-shrink-0`}></div>
+                <span className={`${isDesigner ? 'text-amber-800' : 'text-gray-700'}`}>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Tasks Section */}
+        <div className={`${isDesigner ? 'bg-yellow-100 border-2 border-yellow-300' : 'bg-purple-50'} rounded-xl p-6`}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`w-10 h-10 ${isDesigner ? 'bg-yellow-600' : 'bg-purple-600'} rounded-lg flex items-center justify-center`}>
+              {isDesigner ? (
+                <span className="text-white text-xl">🍯</span>
+              ) : (
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+              )}
+            </div>
+            <h3 className={`text-xl font-semibold ${isDesigner ? 'text-yellow-900' : 'text-gray-900'}`}>Key Tasks</h3>
+          </div>
+          <ul className="space-y-3">
+            {content.tasks.map((task, index) => (
+              <li key={index} className="flex items-start gap-3">
+                <div className={`w-2 h-2 ${isDesigner ? 'bg-yellow-600' : 'bg-purple-600'} rounded-full mt-2 flex-shrink-0`}></div>
+                <span className={`${isDesigner ? 'text-yellow-800' : 'text-gray-700'}`}>{task}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Resources Section */}
+        <div className={`${isDesigner ? 'bg-orange-100 border-2 border-orange-300' : 'bg-green-50'} rounded-xl p-6`}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`w-10 h-10 ${isDesigner ? 'bg-orange-600' : 'bg-green-600'} rounded-lg flex items-center justify-center`}>
+              {isDesigner ? (
+                <span className="text-white text-xl">📐</span>
+              ) : (
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              )}
+            </div>
+            <h3 className={`text-xl font-semibold ${isDesigner ? 'text-orange-900' : 'text-gray-900'}`}>Resources & Documents</h3>
+          </div>
+          <ul className="space-y-3">
+            {content.resources.map((resource, index) => (
+              <li key={index} className="flex items-start gap-3">
+                <div className={`w-2 h-2 ${isDesigner ? 'bg-orange-600' : 'bg-green-600'} rounded-full mt-2 flex-shrink-0`}></div>
+                <a 
+                  href={resource.link} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className={`${isDesigner ? 'text-orange-800 hover:text-orange-900' : 'text-gray-700 hover:text-green-700'} hover:underline transition-colors`}
+                >
+                  {resource.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ---- Hamburger Role Menu ----
 function RoleMenu({ roles, selectedRoleId, onSelect, open, onClose }) {
@@ -130,27 +570,27 @@ function RoleMenu({ roles, selectedRoleId, onSelect, open, onClose }) {
 }
 
 // ---- Header ----
-function AppHeader({ onHamburger, userName }) {
+function AppHeader({ roles, selectedRole, onRoleChange, userName }) {
   return (
     <header className="flex items-center justify-between py-6 px-4 md:px-12 bg-white shadow-sm">
       <div className="flex items-center gap-4">
-        <button
-          aria-label="Open role menu"
-          className="md:hidden rounded-lg p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black"
-          onClick={onHamburger}
-        >
-          <WaffleButtonIcon />
-        </button>
         <WaffleLogo />
         <span className="ml-2 text-xl font-bold tracking-tight text-black hidden md:inline">Waffle Suite Onboarding</span>
       </div>
-      <div className="flex flex-col items-end">
-        <span className="text-base text-gray-700 font-medium">
-          {userName ? `Welcome, ${userName}!` : "Welcome!"}
-        </span>
-        <span className="text-xs text-gray-400 font-light tracking-wide">
-          WaffleTech Industries
-        </span>
+      <div className="flex items-center gap-6">
+        <div className="flex flex-col items-end">
+          <span className="text-base text-gray-700 font-medium">
+            {userName ? `Welcome, ${userName}!` : "Welcome!"}
+          </span>
+          <span className="text-xs text-gray-400 font-light tracking-wide">
+            WaffleTech Industries
+          </span>
+        </div>
+        <RoleSelector 
+          roles={roles} 
+          selectedRole={selectedRole} 
+          onRoleChange={onRoleChange} 
+        />
       </div>
     </header>
   );
@@ -470,7 +910,6 @@ function WaffleOnboardingDashboard() {
   
   const [roles, setRoles] = useState([]);
   const [users, setUsers] = useState([]);
-  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
   const [currentPage, setCurrentPage] = useState("Dashboard");
   const [formState, setFormState] = useState({});
@@ -544,25 +983,28 @@ function WaffleOnboardingDashboard() {
     }, 200);
   }, [formState.role_id, roles]);
 
-  // ---- Hamburger selects a role for onboarding form ----
-  function handleRoleMenuSelect(role) {
-    setFormState(fs => ({ ...fs, role_id: role.role_id }));
+  // ---- Handle role selection from waffle button ----
+  function handleRoleChange(role) {
     setSelectedRole(role);
+    setFormState(fs => ({ ...fs, role_id: role.role_id }));
   }
 
   // ---- Add/Edit User ----
   function validateForm() {
     const errs = {};
-    if (!formState.first_name) errs.first_name = "First name required.";
-    if (!formState.last_name) errs.last_name = "Last name required.";
-    if (!formState.email) errs.email = "Email required.";
-    else if (!formState.email.includes("@")) errs.email = "Invalid email.";
+    if (!formState.first_name || formState.first_name.length < 2) errs.first_name = "First name required (min 2 characters).";
+    if (!formState.last_name || formState.last_name.length < 2) errs.last_name = "Last name required (min 2 characters).";
+    if (!formState.email || formState.email.length < 6) errs.email = "Email required (min 6 characters).";
+    else if (!formState.email.includes("@")) errs.email = "Invalid email format.";
     if (!formState.hire_date) errs.hire_date = "Hire date required.";
+    else if (!/^\d{4}-\d{2}-\d{2}$/.test(formState.hire_date)) errs.hire_date = "Hire date must be in YYYY-MM-DD format.";
     if (!formState.role_id) errs.role_id = "Role required.";
+    if (formState.bio && formState.bio.length > 500) errs.bio = "Bio must be 500 characters or less.";
     return errs;
   }
 
   async function handleFormSubmit() {
+    console.log('Form state before validation:', formState);
     const errs = validateForm();
     setErrors(errs);
     setApiError('');
@@ -579,10 +1021,19 @@ function WaffleOnboardingDashboard() {
         } else {
           // Create new user
           setLoading(prev => ({ ...prev, creating: true }));
-          const newUser = await api.createUser({
-            ...formState,
-            role_id: parseInt(formState.role_id)
-          });
+          
+          // Prepare user data with proper types
+          const userData = {
+            first_name: formState.first_name.trim(),
+            last_name: formState.last_name.trim(),
+            email: formState.email.trim().toLowerCase(),
+            hire_date: formState.hire_date,
+            role_id: parseInt(formState.role_id, 10),
+            bio: formState.bio ? formState.bio.trim() : null
+          };
+          
+          console.log('Submitting user data:', userData);
+          const newUser = await api.createUser(userData);
           setUsers(users => [...users, newUser]);
         }
         
@@ -637,17 +1088,24 @@ function WaffleOnboardingDashboard() {
   // Tailwind's group-hover and animate-fade-in used in relevant places
 
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-gray-50">
-      {/* Role menu (hamburger) */}
-      <RoleMenu
-        roles={roles}
-        selectedRoleId={formState.role_id}
-        onSelect={handleRoleMenuSelect}
-        open={roleMenuOpen}
-        onClose={() => setRoleMenuOpen(false)}
-      />
+    <div 
+      className="min-h-screen flex flex-col font-sans bg-gray-50"
+      style={{
+        backgroundImage: `
+          linear-gradient(45deg, rgba(251, 191, 36, 0.03) 25%, transparent 25%, transparent 50%, rgba(251, 191, 36, 0.03) 50%, rgba(251, 191, 36, 0.03) 75%, transparent 75%, transparent),
+          linear-gradient(-45deg, rgba(245, 158, 11, 0.02) 25%, transparent 25%, transparent 50%, rgba(245, 158, 11, 0.02) 50%, rgba(245, 158, 11, 0.02) 75%, transparent 75%, transparent)
+        `,
+        backgroundSize: '40px 40px, 40px 40px',
+        backgroundPosition: '0 0, 20px 20px'
+      }}
+    >
       {/* Header */}
-      <AppHeader onHamburger={() => setRoleMenuOpen(true)} userName={welcomeName} />
+      <AppHeader 
+        roles={roles} 
+        selectedRole={selectedRole} 
+        onRoleChange={handleRoleChange} 
+        userName={welcomeName} 
+      />
       {/* Main Navigation */}
       <MainNav currentPage={currentPage} onNav={setCurrentPage} />
       
@@ -674,25 +1132,14 @@ function WaffleOnboardingDashboard() {
       
       {/* Main Content */}
       <main className="flex-1 px-2 md:px-12 py-6 transition-colors duration-200">
-        {/* Welcome Section */}
-        <section className="max-w-3xl mx-auto text-center mb-8">
-          <h2 className="text-4xl md:text-5xl font-light text-gray-900 mb-2" style={{ fontFamily: "Inter, sans-serif" }}>
-            Welcome to Waffle Suite!
-          </h2>
-          <p className="text-lg text-gray-500 mb-2">
-            Clean, efficient, and powerful onboarding for every role.<br />
-            <span className="text-black font-semibold">
-              {welcomeName ? `Let's get started, ${welcomeName}!` : "Let's get started!"}
-            </span>
-          </p>
-          <p className="text-gray-400">
-            Manage your team with clarity and ease. Select a role from the <span className="inline-flex items-center"><WaffleButtonIcon /><span className="ml-1">menu</span></span> to tailor the onboarding experience.
-          </p>
+        {/* Role-Based Content Section */}
+        <section className="max-w-6xl mx-auto mb-8">
+          <RoleBasedContent selectedRole={selectedRole} />
         </section>
         {/* Dashboard Stats */}
         <StatsOverview stats={dashboardStats} />
         {/* Main Widgets */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
+        <div className="grid grid-cols-1 gap-8 mt-10">
           {/* Onboarding Form Widget */}
           <section className="rounded-xl bg-white shadow-md p-6 transition hover:shadow-lg animate-fade-in">
             <OnboardingForm
