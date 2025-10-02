@@ -14,6 +14,10 @@ from typing import Optional
 import os
 import uvicorn
 
+# Add CORS
+from fastapi.middleware.cors import CORSMiddleware
+
+
 # ============================================================================
 # SQLAlchemy Database Models
 # ============================================================================
@@ -196,7 +200,14 @@ def get_db():
 app = FastAPI(title="Waffle API", version="1.0.0")
 
 # Configure CORS origins (frontend URLs allowed to access the API)
-origins = ["http://localhost:8080", "http://127.0.0.1:8080"]
+origins = [
+    "http://localhost:8080", 
+    "http://127.0.0.1:8080",
+    "http://localhost:8900", 
+    "http://127.0.0.1:8900",
+    "http://localhost:3000", 
+    "http://127.0.0.1:3000"
+]
 
 # Add CORS middleware to allow cross-origin requests
 app.add_middleware(

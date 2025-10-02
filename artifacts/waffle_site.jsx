@@ -1,3 +1,70 @@
+// ---- API Configuration ----
+const API_BASE_URL = 'http://127.0.0.1:8000';
+
+// ---- API Service Functions ----
+const api = {
+  // Role endpoints
+  async getRoles() {
+    const response = await fetch(`${API_BASE_URL}/roles/`);
+    if (!response.ok) throw new Error('Failed to fetch roles');
+    return await response.json();
+  },
+
+  async createRole(roleData) {
+    const response = await fetch(`${API_BASE_URL}/roles/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(roleData)
+    });
+    if (!response.ok) throw new Error('Failed to create role');
+    return await response.json();
+  },
+
+  // User endpoints
+  async getUsers() {
+    const response = await fetch(`${API_BASE_URL}/users/`);
+    if (!response.ok) throw new Error('Failed to fetch users');
+    return await response.json();
+  },
+
+  async createUser(userData) {
+    const response = await fetch(`${API_BASE_URL}/users/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to create user');
+    }
+    return await response.json();
+  },
+
+  async updateUser(userId, userData) {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update user');
+    }
+    return await response.json();
+  },
+
+  async deleteUser(userId) {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to delete user');
+    }
+    return true;
+  }
+};
+
 // ---- Utility SVGs ----
 const WaffleButtonIcon = () => (
   <img src="/waffle_button4.png" alt="Open Role Menu" className="w-8 h-8" />
@@ -165,7 +232,7 @@ function StatsOverview({ stats }) {
 }
 
 // ---- Onboarding Form ----
-function OnboardingForm({ roles, selectedRole, onSubmit, formState, setFormState, errors, resources }) {
+function OnboardingForm({ roles, selectedRole, onSubmit, formState, setFormState, errors, resources, loading, editingUser }) {
   // Fields always present
   const baseFields = [
     { name: "first_name", label: "First Name", type: "text", required: true },
@@ -270,17 +337,20 @@ function OnboardingForm({ roles, selectedRole, onSubmit, formState, setFormState
         </div>
       )}
       <button
-        className="w-full md:w-auto bg-black hover:bg-gray-800 text-white px-6 py-2 rounded-lg font-medium transition focus:outline-none focus:ring-2 focus:ring-black"
+        className="w-full md:w-auto bg-black hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-medium transition focus:outline-none focus:ring-2 focus:ring-black"
         type="submit"
+        disabled={loading.creating || loading.updating}
       >
-        Add User
+        {loading.creating ? 'Creating User...' : 
+         loading.updating ? 'Updating User...' : 
+         editingUser ? 'Update User' : 'Add User'}
       </button>
     </form>
   );
 }
 
 // ---- Users Table ----
-function UsersTable({ users, roles, onEdit, onDelete }) {
+function UsersTable({ users, roles, onEdit, onDelete, loading }) {
   return (
     <div className="overflow-x-auto rounded-xl border">
       <table className="min-w-full divide-y divide-gray-200 text-sm">
@@ -295,7 +365,11 @@ function UsersTable({ users, roles, onEdit, onDelete }) {
           </tr>
         </thead>
         <tbody className="bg-white divide-y">
-          {users.length === 0 ? (
+          {loading.users ? (
+            <tr>
+              <td colSpan={6} className="px-4 py-4 text-center text-gray-400 italic">Loading users...</td>
+            </tr>
+          ) : users.length === 0 ? (
             <tr>
               <td colSpan={6} className="px-4 py-4 text-center text-gray-400 italic">No users to display.</td>
             </tr>
@@ -306,21 +380,23 @@ function UsersTable({ users, roles, onEdit, onDelete }) {
                 <td className="px-4 py-3">{user.email}</td>
                 <td className="px-4 py-3">{roles.find(r => r.role_id === user.role_id)?.role_name || "—"}</td>
                 <td className="px-4 py-3">{user.hire_date}</td>
-                <td className="px-4 py-3">{user.bio}</td>
+                <td className="px-4 py-3">{user.bio || "—"}</td>
                 <td className="px-4 py-3 flex gap-2">
                   <button
-                    className="px-2 py-1 rounded hover:bg-blue-100 text-blue-600 font-semibold transition"
+                    className="px-2 py-1 rounded hover:bg-blue-100 text-blue-600 font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => onEdit(user)}
+                    disabled={loading.deleting}
                     aria-label="Edit user"
                   >
                     Edit
                   </button>
                   <button
-                    className="px-2 py-1 rounded hover:bg-red-100 text-red-600 font-semibold transition"
+                    className="px-2 py-1 rounded hover:bg-red-100 text-red-600 font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => onDelete(user)}
+                    disabled={loading.deleting}
                     aria-label="Delete user"
                   >
-                    Delete
+                    {loading.deleting ? 'Deleting...' : 'Delete'}
                   </button>
                 </td>
               </tr>
@@ -389,7 +465,9 @@ const dashboardStats = [
 ];
 
 // ---- Main App ----
-export default function WaffleOnboardingDashboard() {
+function WaffleOnboardingDashboard() {
+  const { useState, useEffect } = React;
+  
   const [roles, setRoles] = useState([]);
   const [users, setUsers] = useState([]);
   const [roleMenuOpen, setRoleMenuOpen] = useState(false);
@@ -399,42 +477,50 @@ export default function WaffleOnboardingDashboard() {
   const [errors, setErrors] = useState({});
   const [resources, setResources] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
+  
+  // Loading and error states
+  const [loading, setLoading] = useState({
+    roles: false,
+    users: false,
+    creating: false,
+    updating: false,
+    deleting: false
+  });
+  const [apiError, setApiError] = useState('');
 
-  // ---- Simulated API Calls ----
+  // ---- API Calls ----
   useEffect(() => {
-    // Fetch roles
-    setTimeout(() => {
-      setRoles([
-        { role_id: 1, role_name: "Engineer" },
-        { role_id: 2, role_name: "HR" },
-        { role_id: 3, role_name: "Manager" },
-        { role_id: 4, role_name: "Marketing" },
-      ]);
-    }, 300);
-    // Fetch users
-    setTimeout(() => {
-      setUsers([
-        {
-          user_id: 1,
-          first_name: "Emily",
-          last_name: "Johnson",
-          email: "emily.johnson@waffletech.com",
-          hire_date: "2024-03-12",
-          role_id: 1,
-          bio: "Excited to join the engineering team!",
-        },
-        {
-          user_id: 2,
-          first_name: "Michael",
-          last_name: "Smith",
-          email: "michael.smith@waffletech.com",
-          hire_date: "2024-03-01",
-          role_id: 2,
-          bio: "Passionate about people ops.",
-        }
-      ]);
-    }, 300);
+    loadRoles();
+    loadUsers();
   }, []);
+
+  async function loadRoles() {
+    setLoading(prev => ({ ...prev, roles: true }));
+    setApiError('');
+    try {
+      const rolesData = await api.getRoles();
+      setRoles(rolesData);
+    } catch (error) {
+      console.error('Failed to load roles:', error);
+      setApiError('Failed to load roles. Please try again.');
+    } finally {
+      setLoading(prev => ({ ...prev, roles: false }));
+    }
+  }
+
+  async function loadUsers() {
+    setLoading(prev => ({ ...prev, users: true }));
+    setApiError('');
+    try {
+      const usersData = await api.getUsers();
+      setUsers(usersData);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+      setApiError('Failed to load users. Please try again.');
+    } finally {
+      setLoading(prev => ({ ...prev, users: false }));
+    }
+  }
 
   // ---- Role change: onboarding form fields and resources ----
   useEffect(() => {
@@ -475,40 +561,71 @@ export default function WaffleOnboardingDashboard() {
     if (!formState.role_id) errs.role_id = "Role required.";
     return errs;
   }
-  function handleFormSubmit() {
+
+  async function handleFormSubmit() {
     const errs = validateForm();
     setErrors(errs);
+    setApiError('');
+    
     if (Object.keys(errs).length === 0) {
-      if (editingUser) {
-        setUsers(users =>
-          users.map(u => (u.user_id === editingUser.user_id ? { ...editingUser, ...formState } : u))
-        );
-      } else {
-        setUsers(users => [
-          ...users,
-          {
-            user_id: users.length ? Math.max(...users.map(u => u.user_id)) + 1 : 1,
+      try {
+        if (editingUser) {
+          // Update existing user
+          setLoading(prev => ({ ...prev, updating: true }));
+          const updatedUser = await api.updateUser(editingUser.user_id, formState);
+          setUsers(users => users.map(u => 
+            u.user_id === editingUser.user_id ? updatedUser : u
+          ));
+        } else {
+          // Create new user
+          setLoading(prev => ({ ...prev, creating: true }));
+          const newUser = await api.createUser({
             ...formState,
-          },
-        ]);
+            role_id: parseInt(formState.role_id)
+          });
+          setUsers(users => [...users, newUser]);
+        }
+        
+        // Reset form
+        setEditingUser(null);
+        setFormState({});
+        setErrors({});
+        
+      } catch (error) {
+        console.error('Failed to save user:', error);
+        setApiError(error.message || 'Failed to save user. Please try again.');
+      } finally {
+        setLoading(prev => ({ ...prev, creating: false, updating: false }));
       }
-      setEditingUser(null);
-      setFormState({});
-      setErrors({});
     }
   }
+
   function handleEditUser(user) {
     setEditingUser(user);
     setFormState({ ...user });
     setErrors({});
+    setApiError('');
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-  function handleDeleteUser(user) {
+
+  async function handleDeleteUser(user) {
     if (window.confirm(`Delete ${user.first_name} ${user.last_name}?`)) {
-      setUsers(users => users.filter(u => u.user_id !== user.user_id));
-      if (editingUser && editingUser.user_id === user.user_id) {
-        setEditingUser(null);
-        setFormState({});
+      setLoading(prev => ({ ...prev, deleting: true }));
+      setApiError('');
+      
+      try {
+        await api.deleteUser(user.user_id);
+        setUsers(users => users.filter(u => u.user_id !== user.user_id));
+        
+        if (editingUser && editingUser.user_id === user.user_id) {
+          setEditingUser(null);
+          setFormState({});
+        }
+      } catch (error) {
+        console.error('Failed to delete user:', error);
+        setApiError(error.message || 'Failed to delete user. Please try again.');
+      } finally {
+        setLoading(prev => ({ ...prev, deleting: false }));
       }
     }
   }
@@ -533,6 +650,28 @@ export default function WaffleOnboardingDashboard() {
       <AppHeader onHamburger={() => setRoleMenuOpen(true)} userName={welcomeName} />
       {/* Main Navigation */}
       <MainNav currentPage={currentPage} onNav={setCurrentPage} />
+      
+      {/* Error Display */}
+      {apiError && (
+        <div className="mx-2 md:mx-12 mb-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
+            <svg className="w-5 h-5 text-red-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-red-700 text-sm">{apiError}</p>
+            <button 
+              className="ml-auto text-red-400 hover:text-red-600"
+              onClick={() => setApiError('')}
+              aria-label="Close error"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* Main Content */}
       <main className="flex-1 px-2 md:px-12 py-6 transition-colors duration-200">
         {/* Welcome Section */}
@@ -564,6 +703,8 @@ export default function WaffleOnboardingDashboard() {
               setFormState={setFormState}
               errors={errors}
               resources={resources}
+              loading={loading}
+              editingUser={editingUser}
             />
           </section>
           {/* Users Table Widget */}
@@ -575,7 +716,7 @@ export default function WaffleOnboardingDashboard() {
               <span className="text-gray-700 font-medium">Users</span>
               <span className="text-gray-400 ml-2 text-sm">{users.length} total</span>
             </div>
-            <UsersTable users={users} roles={roles} onEdit={handleEditUser} onDelete={handleDeleteUser} />
+            <UsersTable users={users} roles={roles} onEdit={handleEditUser} onDelete={handleDeleteUser} loading={loading} />
           </section>
         </div>
       </main>
@@ -587,4 +728,4 @@ export default function WaffleOnboardingDashboard() {
 
 // Render the component to the DOM
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<UserManagementApp />);
+root.render(<WaffleOnboardingDashboard />);
