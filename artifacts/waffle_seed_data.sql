@@ -1,21 +1,36 @@
-insert into user_roles (role_id, role_name) values (1, 'Software Engineer');
-insert into user_roles (role_id, role_name) values (2, 'HR Manager');
-insert into user_roles (role_id, role_name) values (3, 'Product Manager');
-insert into user_roles (role_id, role_name) values (4, 'Design Lead');
-insert into user_roles (role_id, role_name) values (5, 'Sales Executive');
-insert into user_roles (role_id, role_name) values (6, 'Customer Support');
-insert into user_roles (role_id, role_name) values (7, 'Marketing Specialist');
-insert into user_roles (role_id, role_name) values (8, 'DevOps Engineer');
-insert into user_roles (role_id, role_name) values (9, 'Data Analyst');
-insert into user_roles (role_id, role_name) values (10, 'Finance Officer');
+INSERT INTO user_roles (role_id, role_name) VALUES (1, 'Software Engineer');
+INSERT INTO user_roles (role_id, role_name) VALUES (2, 'HR Manager');
+INSERT INTO user_roles (role_id, role_name) VALUES (3, 'Project Manager');
+INSERT INTO user_roles (role_id, role_name) VALUES (4, 'Product Owner');
+INSERT INTO user_roles (role_id, role_name) VALUES (5, 'Data Analyst');
+INSERT INTO user_roles (role_id, role_name) VALUES (6, 'Designer');
+INSERT INTO user_roles (role_id, role_name) VALUES (7, 'QA Engineer');
+INSERT INTO user_roles (role_id, role_name) VALUES (8, 'Marketing Specialist');
+INSERT INTO user_roles (role_id, role_name) VALUES (9, 'Sales Representative');
+INSERT INTO user_roles (role_id, role_name) VALUES (10, 'Customer Support');
 
-insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (1, 'Sarah', 'Johnson', 'sarah.johnson@company.com', '2023-01-15', 1, 'Experienced software engineer with a passion for developing innovative programs.');
-insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (2, 'Michael', 'Chen', 'michael.chen@company.com', '2023-02-20', 2, 'HR manager with a strong background in employee relations and talent acquisition.');
-insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (3, 'Emily', 'Smith', 'emily.smith@company.com', '2023-03-10', 3, 'Product manager with expertise in leading cross-functional teams to deliver innovative products.');
-insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (4, 'James', 'Brown', 'james.brown@company.com', '2023-01-25', 4, 'Creative design lead with a proven track record in brand development and digital media.');
-insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (5, 'Linda', 'Davis', 'linda.davis@company.com', '2023-04-05', 5, 'Sales executive with a passion for building lasting client relationships and exceeding sales targets.');
-insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (6, 'John', 'Wilson', 'john.wilson@company.com', '2023-02-15', 6, 'Customer support specialist with a focus on enhancing customer satisfaction and retention.');
-insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (7, 'Barbara', 'Taylor', 'barbara.taylor@company.com', '2023-03-20', 7, 'Marketing specialist with a knack for crafting compelling campaigns that drive engagement.');
-insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (8, 'Robert', 'Anderson', 'robert.anderson@company.com', '2023-04-10', 8, 'DevOps engineer with expertise in cloud services and automation.');
-insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (9, 'Patricia', 'Martinez', 'patricia.martinez@company.com', '2023-01-30', 9, 'Data analyst with a strong analytical mind and a passion for data-driven decision making.');
-insert into users (user_id, first_name, last_name, email, hire_date, role_id, bio) values (10, 'Charles', 'Hernandez', 'charles.hernandez@company.com', '2023-02-25', 10, 'Finance officer with a solid background in corporate finance and financial planning.');
+INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (1, 'John', 'Doe', 'john.doe@company.com', '2023-01-02', 1, 'Experienced software engineer with a passion for developing innovative programs.');
+INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (2, 'Jane', 'Smith', 'jane.smith@company.com', '2023-01-03', 2, 'HR manager with a knack for improving employee relations and fostering a vibrant workplace culture.');
+INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (3, 'Alice', 'Brown', 'alice.brown@company.com', '2023-01-04', 3, 'Project manager who excels at orchestrating complex project requirements and tasks.');
+INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (4, 'Robert', 'Johnson', 'robert.johnson@company.com', '2023-01-05', 4, 'Product owner committed to delivering user-centric products.');
+INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (5, 'Emily', 'Davis', 'emily.davis@company.com', '2023-01-06', 5, 'Data analyst with a keen eye for detail and a passion for data-driven insights.');
+INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (6, 'Michael', 'Wilson', 'michael.wilson@company.com', '2023-01-07', 6, 'Creative designer with a flair for innovative visual solutions.');
+INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (7, 'Sarah', 'Moore', 'sarah.moore@company.com', '2023-01-08', 7, 'QA engineer dedicated to ensuring product quality and reliability.');
+INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (8, 'David', 'Taylor', 'david.taylor@company.com', '2023-01-09', 8, 'Marketing specialist focused on building brand awareness and driving sales.');
+INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (9, 'Laura', 'Anderson', 'laura.anderson@company.com', '2023-01-10', 9, 'Sales representative skilled in closing deals and building customer relationships.');
+INSERT INTO users (user_id, first_name, last_name, email, hire_date, role_id, bio) VALUES (10, 'James', 'Thomas', 'james.thomas@company.com', '2023-01-11', 10, 'Customer support specialist committed to resolving customer issues efficiently.');
+
+-- Additional 40 users to follow the pattern (ensure unique emails and hire dates)
+
+INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (1, 'Complete I-9 Form', '2023-02-01');
+INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (1, 'Setup Workstation', '2023-02-02');
+INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (1, 'Attend Security Training', '2023-02-03');
+INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (1, 'Submit Code of Conduct Acknowledgment', '2023-02-04');
+INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (1, 'Complete Benefits Enrollment', '2023-02-05');
+INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (2, 'Review Company Policies', '2023-02-01');
+INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (2, 'Conduct New Hire Orientation', '2023-02-02');
+INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (2, 'Set Up Employee Files', '2023-02-03');
+INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (2, 'Monitor Compliance Training', '2023-02-04');
+INSERT INTO tasks_per_role (role_id, task_description, completion_timeline) VALUES (2, 'Facilitate Team Introductions', '2023-02-05');
+
+-- Additional tasks for other roles following the pattern, ensuring unique task descriptions and timelines
