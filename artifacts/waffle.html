@@ -182,7 +182,8 @@
 
       return e('div',{className:'min-h-screen flex flex-col'},
         e('header',{className:'bg-white border-b px-4 py-3 flex items-center justify-between'},
-          e('div',{className:'font-bold tracking-wide text-lg'},'WaffleTech'),
+          // Brand clickable to return to Dashboard
+          e('button',{type:'button',onClick:()=>setPage('Dashboard'),className:'font-bold tracking-wide text-lg text-left focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black rounded'},'WaffleTech'),
           e('nav',{className:'flex gap-4 text-sm'},
             ['Dashboard','Users'].map(p=> e('button',{key:p,onClick:()=>setPage(p), className: (page===p?'text-black font-semibold':'text-gray-500 hover:text-black')}, p))
           )
