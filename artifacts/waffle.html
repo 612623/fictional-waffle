@@ -336,7 +336,10 @@
             ) : e('p',{className:'text-sm text-gray-500 italic'},'No roles yet — add one on the Dashboard.')
           )
         ),
-        e('footer',{className:'mt-12 py-6 text-center text-xs text-gray-500'}, `© ${new Date().getFullYear()} WaffleTech Industries`)
+        e('footer',{className:'mt-12 py-6 text-center text-xs text-gray-500 space-y-1'},
+          `© ${new Date().getFullYear()} WaffleTech Industries`,
+          e('div',{className:'text-[10px] text-gray-400 italic'},'Developed Booz Allen Hamilton – All Copyrights Reserved')
+        )
       );
     }
 
