@@ -1,8 +1,8 @@
 """
 Waffle Tech Suite API
 
-A FastAPI application for managing users and user roles with full CRUD operations.
-Provides REST API endpoints for user management with role-based categorization.
+A FastAPI application for managing users, user roles, and tasks with full CRUD operations.
+Provides REST API endpoints for user management with role-based categorization and task assignment.
 """
 
 from fastapi import FastAPI, HTTPException, Depends
@@ -13,10 +13,6 @@ from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 from typing import Optional
 import os
 import uvicorn
-
-# Add CORS
-from fastapi.middleware.cors import CORSMiddleware
-
 
 # ============================================================================
 # SQLAlchemy Database Models
@@ -32,14 +28,16 @@ class UserRole(Base):
         role_id (int): Primary key, auto-incremented role identifier
         role_name (str): Unique name of the role (e.g., 'Admin', 'Developer')
         users (relationship): One-to-many relationship with User model
+        tasks (relationship): One-to-many relationship with TaskPerRole model
     """
     __tablename__ = 'user_roles'
     
     role_id = Column(Integer, primary_key=True, autoincrement=True)
     role_name = Column(String(100), unique=True, nullable=False)
     
-    # Relationship: one role can have many users
+    # Relationships: one role can have many users and many tasks
     users = relationship("User", back_populates="role")
+    tasks = relationship("TaskPerRole", back_populates="role")
 
 class User(Base):
     """
@@ -68,10 +66,32 @@ class User(Base):
     # Relationship: each user belongs to one role
     role = relationship("UserRole", back_populates="users")
 
+class TaskPerRole(Base):
+    """
+    SQLAlchemy model for tasks_per_role table.
+    
+    Attributes:
+        task_id (int): Primary key, auto-incremented task identifier
+        role_id (int): Foreign key reference to user_roles table
+        task_description (str): Description of the task to be completed
+        completion_timeline (str): Expected completion date (stored as text in YYYY-MM-DD format)
+        role (relationship): Many-to-one relationship with UserRole model
+    """
+    __tablename__ = 'tasks_per_role'
+    
+    task_id = Column(Integer, primary_key=True, autoincrement=True)
+    role_id = Column(Integer, ForeignKey('user_roles.role_id'), nullable=False)
+    task_description = Column(String(500), nullable=False)
+    completion_timeline = Column(String(50), nullable=False)
+    
+    # Relationship: each task belongs to one role
+    role = relationship("UserRole", back_populates="tasks")
+
 # ============================================================================
 # Pydantic Models for Request/Response Validation
 # ============================================================================
 
+# Role Models
 class RoleBase(BaseModel):
     """
     Base Pydantic model for role data.
@@ -100,6 +120,7 @@ class RoleResponse(RoleBase):
     
     model_config = ConfigDict(from_attributes=True)
 
+# User Models
 class UserBase(BaseModel):
     """
     Base Pydantic model for user data.
@@ -158,6 +179,53 @@ class UserResponse(UserBase):
     
     model_config = ConfigDict(from_attributes=True)
 
+# Task Models
+class TaskBase(BaseModel):
+    """
+    Base Pydantic model for task data.
+    
+    Attributes:
+        role_id (int): Foreign key reference to a role
+        task_description (str): Description of the task
+        completion_timeline (str): Expected completion date (YYYY-MM-DD format)
+    """
+    role_id: int
+    task_description: str = Field(..., min_length=5, max_length=500)
+    completion_timeline: str = Field(..., pattern=r'^\d{4}-\d{2}-\d{2}$')
+
+class TaskCreate(TaskBase):
+    """
+    Pydantic model for creating a new task.
+    Inherits all fields from TaskBase.
+    """
+    pass
+
+class TaskUpdate(BaseModel):
+    """
+    Pydantic model for partial task updates (PATCH requests).
+    All fields are optional to allow partial updates.
+    
+    Attributes:
+        role_id (Optional[int]): Updated role assignment
+        task_description (Optional[str]): Updated task description
+        completion_timeline (Optional[str]): Updated completion date
+    """
+    role_id: Optional[int] = None
+    task_description: Optional[str] = Field(None, min_length=5, max_length=500)
+    completion_timeline: Optional[str] = Field(None, pattern=r'^\d{4}-\d{2}-\d{2}$')
+
+class TaskResponse(TaskBase):
+    """
+    Pydantic model for task response data.
+    
+    Attributes:
+        task_id (int): Unique identifier for the task
+        All other fields inherited from TaskBase
+    """
+    task_id: int
+    
+    model_config = ConfigDict(from_attributes=True)
+
 # ============================================================================
 # Database Configuration
 # ============================================================================
@@ -197,17 +265,10 @@ def get_db():
 # ============================================================================
 
 # Initialize FastAPI application
-app = FastAPI(title="Waffle API", version="1.0.0")
+app = FastAPI(title="Waffle Tech Suite API", version="1.0.0")
 
 # Configure CORS origins (frontend URLs allowed to access the API)
-origins = [
-    "http://localhost:8080", 
-    "http://127.0.0.1:8080",
-    "http://localhost:8900", 
-    "http://127.0.0.1:8900",
-    "http://localhost:3000", 
-    "http://127.0.0.1:3000"
-]
+origins = ["http://localhost:8080", "http://127.0.0.1:8080"]
 
 # Add CORS middleware to allow cross-origin requests
 app.add_middleware(
@@ -280,6 +341,37 @@ def get_role(role_id: int, db: Session = Depends(get_db)):
     role = db.query(UserRole).filter(UserRole.role_id == role_id).first()
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
+    return role
+
+@app.put("/roles/{role_id}", response_model=RoleResponse)
+def update_role(role_id: int, role_data: RoleCreate, db: Session = Depends(get_db)):
+    """Update a role's name.
+
+    Args:
+        role_id (int): ID of role to update
+        role_data (RoleCreate): New role data (role_name)
+        db (Session): Database session
+
+    Returns:
+        RoleResponse: Updated role
+
+    Raises:
+        HTTPException: 404 if role not found
+        HTTPException: 400 if new name duplicates another role
+    """
+    role = db.query(UserRole).filter(UserRole.role_id == role_id).first()
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+
+    # If changing name ensure uniqueness
+    if role.role_name != role_data.role_name:
+        existing = db.query(UserRole).filter(UserRole.role_name == role_data.role_name).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Role with this name already exists")
+
+    role.role_name = role_data.role_name
+    db.commit()
+    db.refresh(role)
     return role
 
 # ============================================================================
@@ -468,6 +560,193 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.delete(user)
     db.commit()
     return {"detail": "User deleted successfully"}
+
+# ============================================================================
+# Task Management Endpoints
+# ============================================================================
+
+@app.post("/tasks/", response_model=TaskResponse)
+def create_task(task_data: TaskCreate, db: Session = Depends(get_db)):
+    """
+    Create a new task for a role.
+    
+    Args:
+        task_data (TaskCreate): Task information including role_id, description, and timeline
+        db (Session): Database session dependency
+        
+    Returns:
+        TaskResponse: Created task with task_id
+        
+    Raises:
+        HTTPException: 400 if role_id is invalid
+    """
+    # Validate that the role exists
+    role = db.query(UserRole).filter(UserRole.role_id == task_data.role_id).first()
+    if not role:
+        raise HTTPException(status_code=400, detail="Invalid role_id")
+    
+    # Create new task instance
+    new_task = TaskPerRole(
+        role_id=task_data.role_id,
+        task_description=task_data.task_description,
+        completion_timeline=task_data.completion_timeline
+    )
+    
+    db.add(new_task)
+    db.commit()
+    db.refresh(new_task)
+    return new_task
+
+@app.get("/tasks/", response_model=list[TaskResponse])
+def list_tasks(db: Session = Depends(get_db)):
+    """
+    Retrieve all tasks.
+    
+    Args:
+        db (Session): Database session dependency
+        
+    Returns:
+        list[TaskResponse]: List of all tasks in the database
+    """
+    tasks = db.query(TaskPerRole).all()
+    return tasks
+
+@app.get("/tasks/{task_id}", response_model=TaskResponse)
+def get_task(task_id: int, db: Session = Depends(get_db)):
+    """
+    Retrieve a specific task by ID.
+    
+    Args:
+        task_id (int): Unique identifier for the task
+        db (Session): Database session dependency
+        
+    Returns:
+        TaskResponse: Task information
+        
+    Raises:
+        HTTPException: 404 if task not found
+    """
+    task = db.query(TaskPerRole).filter(TaskPerRole.task_id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
+
+@app.get("/tasks/role/{role_id}", response_model=list[TaskResponse])
+def get_tasks_by_role(role_id: int, db: Session = Depends(get_db)):
+    """
+    Retrieve all tasks for a specific role.
+    
+    Args:
+        role_id (int): Unique identifier for the role
+        db (Session): Database session dependency
+        
+    Returns:
+        list[TaskResponse]: List of all tasks assigned to the role
+        
+    Raises:
+        HTTPException: 404 if role not found
+    """
+    # Validate that the role exists
+    role = db.query(UserRole).filter(UserRole.role_id == role_id).first()
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+    
+    tasks = db.query(TaskPerRole).filter(TaskPerRole.role_id == role_id).all()
+    return tasks
+
+@app.put("/tasks/{task_id}", response_model=TaskResponse)
+def update_task(task_id: int, task_data: TaskCreate, db: Session = Depends(get_db)):
+    """
+    Update all fields of an existing task (full update).
+    
+    Args:
+        task_id (int): Unique identifier for the task to update
+        task_data (TaskCreate): Complete task information for update
+        db (Session): Database session dependency
+        
+    Returns:
+        TaskResponse: Updated task information
+        
+    Raises:
+        HTTPException: 404 if task not found
+        HTTPException: 400 if role_id is invalid
+    """
+    task = db.query(TaskPerRole).filter(TaskPerRole.task_id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Validate that the role exists
+    role = db.query(UserRole).filter(UserRole.role_id == task_data.role_id).first()
+    if not role:
+        raise HTTPException(status_code=400, detail="Invalid role_id")
+    
+    # Update all task fields
+    task.role_id = task_data.role_id
+    task.task_description = task_data.task_description
+    task.completion_timeline = task_data.completion_timeline
+    
+    db.commit()
+    db.refresh(task)
+    return task
+
+@app.patch("/tasks/{task_id}", response_model=TaskResponse)
+def partial_update_task(task_id: int, task_data: TaskUpdate, db: Session = Depends(get_db)):
+    """
+    Partially update a task (only provided fields are updated).
+    
+    Args:
+        task_id (int): Unique identifier for the task to update
+        task_data (TaskUpdate): Partial task information for update
+        db (Session): Database session dependency
+        
+    Returns:
+        TaskResponse: Updated task information
+        
+    Raises:
+        HTTPException: 404 if task not found
+        HTTPException: 400 if role_id is invalid
+    """
+    task = db.query(TaskPerRole).filter(TaskPerRole.task_id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Validate role exists if being updated
+    if task_data.role_id is not None:
+        role = db.query(UserRole).filter(UserRole.role_id == task_data.role_id).first()
+        if not role:
+            raise HTTPException(status_code=400, detail="Invalid role_id")
+    
+    # Update only provided fields
+    update_data = task_data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(task, key, value)
+    
+    db.commit()
+    db.refresh(task)
+    return task
+
+@app.delete("/tasks/{task_id}")
+def delete_task(task_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a task by ID.
+    
+    Args:
+        task_id (int): Unique identifier for the task to delete
+        db (Session): Database session dependency
+        
+    Returns:
+        dict: Success message confirming deletion
+        
+    Raises:
+        HTTPException: 404 if task not found
+    """
+    task = db.query(TaskPerRole).filter(TaskPerRole.task_id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    db.delete(task)
+    db.commit()
+    return {"detail": "Task deleted successfully"}
 
 # ============================================================================
 # Application Entry Point
