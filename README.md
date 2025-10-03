@@ -1,4 +1,2 @@
 # fictional-waffle
-prototyping
-
-Initializing the repo
+See artifacts/README.md
