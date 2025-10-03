@@ -14,20 +14,26 @@ The primary goal of the application is to provide a front end website for user o
 
 * **Documentation:**
     * `Product Requirements Document (PRD)` generated from a high-level idea.
-    :waffle_PRD_output_from_Template.md
+    * `waffle_PRD_output_from_Template.md`
     * `Architecture Document (UML)` including auto-generated UML diagrams (e.g., Component or Sequence diagrams).
-    :uml_component_diagram.puml
-    :uml_component_diagram.png
+    * `uml_component_diagram.puml`
+    * `uml_component_diagram.png`
     * `Architecture Decision Records (ADR)` including auto-generated technical decisions with their justifications.
-    :adr_001_database_choice.md
+    * `adr_001_database_choice.md`
 * **Backend Application:**
     * A complete REST API project using **Python and FastAPI**.
+    * `waffle_main.py`
     * An AI-generated database schema (e.g., `schema.sql`).
+    * `waffle_schema.sql`
     * A suite of **unit tests** generated with AI assistance.
+    * `test_waffle_main.py`
     * A report or list of identified **security vulnerabilities**.
+    * `security_review.md`
 * **Frontend Application:**
     * A **React** frontend that interacts with your backend API.
+    * `waffle.html`
     * At least one key component generated from a **design screenshot or mockup**.
+    * `ui_template1.png`
 * **Final Presentation:**
     * A **10-15 minute presentation** summarizing your project.
     * A **live demo** of your fully working front-end and back-end application.
