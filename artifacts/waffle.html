@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WaffleTech Onboarding</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <div id="root"></div>
+  <script>
+    const { useState, useEffect } = React;
+    const e = React.createElement;
+
+    // --- Minimal API wrapper (assumes FastAPI backend on localhost) ---
+    const apiBase = 'http://127.0.0.1:8000';
+    const api = {
+      async getRoles() { const r = await fetch(apiBase + '/roles/'); if (!r.ok) throw new Error('Failed roles'); return r.json(); },
+      async createRole(data) { const r = await fetch(apiBase + '/roles/', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) }); if(!r.ok) throw new Error('Create role failed'); return r.json(); },
+  async updateRole(id,data){ const r = await fetch(`${apiBase}/roles/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)}); if(!r.ok) throw new Error('Update role failed'); return r.json(); },
+      async getUsers() { const r = await fetch(apiBase + '/users/'); if(!r.ok) throw new Error('Failed users'); return r.json(); },
+      async createUser(data) { const r = await fetch(apiBase + '/users/', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) }); if(!r.ok) throw new Error('Create user failed'); return r.json(); },
+      async updateUser(id,data){ const r=await fetch(`${apiBase}/users/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); if(!r.ok) throw new Error('Update failed'); return r.json(); },
+      async deleteUser(id){ const r=await fetch(`${apiBase}/users/${id}`,{method:'DELETE'}); if(!r.ok) throw new Error('Delete failed'); return r.json(); },
+      async createRoleTask(roleId, data){ // backend expects full task with description + timeline
+        const payload = { role_id: parseInt(roleId), task_description: data.task_name, completion_timeline: data.completion_timeline || new Date().toISOString().slice(0,10) };
+        const r = await fetch(`${apiBase}/tasks/`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+        if(!r.ok) throw new Error('Create task failed'); return r.json(); },
+      async getRoleTasks(roleId){ const r = await fetch(`${apiBase}/tasks/role/${roleId}`); if(r.status===404) return []; if(!r.ok) throw new Error('Get tasks failed'); return r.json(); }
+      ,async updateTask(taskId, data){
+        const payload = { role_id: parseInt(data.role_id), task_description: data.task_description, completion_timeline: data.completion_timeline };
+        const r = await fetch(`${apiBase}/tasks/${taskId}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+        if(!r.ok) throw new Error('Update task failed'); return r.json(); }
+    };
+
+    function StatCard({label,value,icon,className,onClick}) {
+      return e('button',{onClick, className:'flex flex-col items-center justify-center p-4 rounded-xl border bg-white shadow-sm hover:shadow transition text-center ' + (className||'')},
+        icon,
+        e('div',{className:'mt-2 text-2xl font-semibold'}, value),
+        e('div',{className:'text-xs tracking-wide text-gray-500 uppercase mt-1'}, label)
+      );
+    }
+
+    function UsersTable({users,roles,onEdit,onDelete,loading}) {
+      return e('div',{className:'overflow-x-auto rounded-xl border bg-white'},
+        e('table',{className:'min-w-full divide-y divide-gray-200 text-sm'},
+          e('thead',{className:'bg-gray-50'},
+            e('tr',null,['Name','Email','Role','Hire Date','Bio',''].map(h=>e('th',{key:h,className:'px-4 py-3 text-left font-semibold text-gray-700'},h)))
+          ),
+          e('tbody',{className:'divide-y'},
+            loading ? e('tr',null,e('td',{colSpan:6,className:'px-4 py-6 text-center text-gray-400 italic'},'Loading...')) :
+            users.length===0 ? e('tr',null,e('td',{colSpan:6,className:'px-4 py-6 text-center text-gray-400 italic'},'No users')) :
+            users.map(u=> e('tr',{key:u.user_id,className:'hover:bg-gray-50'},
+              e('td',{className:'px-4 py-3'}, `${u.first_name} ${u.last_name}`),
+              e('td',{className:'px-4 py-3'}, u.email),
+              e('td',{className:'px-4 py-3'}, roles.find(r=>r.role_id===u.role_id)?.role_name || '—'),
+              e('td',{className:'px-4 py-3'}, u.hire_date),
+              e('td',{className:'px-4 py-3'}, u.bio || '—'),
+              e('td',{className:'px-4 py-3 flex gap-2'},
+                e('button',{className:'px-2 py-1 text-blue-600 hover:bg-blue-50 rounded', onClick:()=>onEdit(u)},'Edit'),
+                e('button',{className:'px-2 py-1 text-red-600 hover:bg-red-50 rounded', onClick:()=>onDelete(u)},'Del')
+              )
+            ))
+          )
+        )
+      );
+    }
+
+    function OnboardingForm({roles,formState,setFormState,onSubmit,loading,editing,errors}) {
+      return e('form',{className:'space-y-3', onSubmit: evt=>{evt.preventDefault(); onSubmit();}},
+        e('div',null,
+          e('label',{className:'block text-xs font-medium text-gray-600 mb-1'},'First Name'),
+          e('input',{className:'w-full border rounded px-2 py-1', value:formState.first_name||'', onChange:ev=>setFormState(f=>({...f,first_name:ev.target.value}))}),
+          errors.first_name && e('p',{className:'text-xs text-red-500'},errors.first_name)
+        ),
+        e('div',null,
+          e('label',{className:'block text-xs font-medium text-gray-600 mb-1'},'Last Name'),
+          e('input',{className:'w-full border rounded px-2 py-1', value:formState.last_name||'', onChange:ev=>setFormState(f=>({...f,last_name:ev.target.value}))}),
+          errors.last_name && e('p',{className:'text-xs text-red-500'},errors.last_name)
+        ),
+        e('div',null,
+          e('label',{className:'block text-xs font-medium text-gray-600 mb-1'},'Email'),
+          e('input',{type:'email',className:'w-full border rounded px-2 py-1', value:formState.email||'', onChange:ev=>setFormState(f=>({...f,email:ev.target.value}))}),
+          errors.email && e('p',{className:'text-xs text-red-500'},errors.email)
+        ),
+        e('div',null,
+          e('label',{className:'block text-xs font-medium text-gray-600 mb-1'},'Hire Date'),
+          e('input',{type:'date',className:'w-full border rounded px-2 py-1', value:formState.hire_date||'', onChange:ev=>setFormState(f=>({...f,hire_date:ev.target.value}))}),
+          errors.hire_date && e('p',{className:'text-xs text-red-500'},errors.hire_date)
+        ),
+        e('div',null,
+          e('label',{className:'block text-xs font-medium text-gray-600 mb-1'},'Role'),
+          e('select',{className:'w-full border rounded px-2 py-1', value:formState.role_id||'', onChange:ev=>setFormState(f=>({...f,role_id:ev.target.value}))},
+            e('option',{value:''},'Select role'),
+            roles.map(r=> e('option',{key:r.role_id,value:r.role_id}, r.role_name))
+          ),
+          errors.role_id && e('p',{className:'text-xs text-red-500'},errors.role_id)
+        ),
+        e('div',null,
+          e('label',{className:'block text-xs font-medium text-gray-600 mb-1'},'Bio'),
+          e('textarea',{className:'w-full border rounded px-2 py-1', rows:2, value:formState.bio||'', onChange:ev=>setFormState(f=>({...f,bio:ev.target.value}))})
+        ),
+        e('div',{className:'flex gap-2'},
+          e('button',{type:'submit', disabled:loading.creating||loading.updating, className:'bg-black text-white px-4 py-2 rounded disabled:opacity-50'}, editing? (loading.updating? 'Updating...' : 'Update User') : (loading.creating? 'Creating...' : 'Add User')),
+          editing && e('button',{type:'button', onClick:()=>setFormState({}), className:'px-4 py-2 rounded border'},'Cancel')
+        )
+      );
+    }
+
+    function App() {
+      const [roles,setRoles] = useState([]);
+      const [users,setUsers] = useState([]);
+      const [formState,setFormState] = useState({});
+      const [errors,setErrors] = useState({});
+      const [editingUser,setEditingUser] = useState(null);
+      const [filterRole,setFilterRole] = useState('');
+      const [page,setPage] = useState('Dashboard');
+      const [loading,setLoading] = useState({roles:false,users:false,creating:false,updating:false,deleting:false,creatingTask:false,loadingTasks:false});
+      const [apiError,setApiError] = useState('');
+      const [taskRoleId,setTaskRoleId] = useState('');
+      const [taskName,setTaskName] = useState('');
+      const [roleTasks,setRoleTasks] = useState([]);
+  const [editingTaskId,setEditingTaskId] = useState(null);
+  const [editingTaskDesc,setEditingTaskDesc] = useState('');
+  const [editingTaskTimeline,setEditingTaskTimeline] = useState('');
+  const [editingRoleId,setEditingRoleId] = useState(null);
+  const [editingRoleName,setEditingRoleName] = useState('');
+
+  useEffect(()=>{ fetchRoles(); fetchUsers(); },[]);
+  // Auto-fetch tasks when selected role changes
+  useEffect(()=>{ if(taskRoleId) { fetchTasks(taskRoleId); } }, [taskRoleId]);
+
+      async function fetchRoles(){ setLoading(l=>({...l,roles:true})); try{ setRoles(await api.getRoles()); } catch(e){ setApiError(e.message);} finally{ setLoading(l=>({...l,roles:false}));}}
+      async function fetchUsers(){ setLoading(l=>({...l,users:true})); try{ setUsers(await api.getUsers()); } catch(e){ setApiError(e.message);} finally{ setLoading(l=>({...l,users:false}));}}
+      async function fetchTasks(rid){ if(!rid){ setRoleTasks([]); return; } setLoading(l=>({...l,loadingTasks:true})); try{ const data = await api.getRoleTasks(rid); setRoleTasks(data); } catch(e){ setApiError(e.message);} finally{ setLoading(l=>({...l,loadingTasks:false}));}}
+
+      function validate(){ const e={}; if(!formState.first_name) e.first_name='Required'; if(!formState.last_name) e.last_name='Required'; if(!formState.email) e.email='Required'; else if(!formState.email.includes('@')) e.email='Invalid'; if(!formState.hire_date) e.hire_date='Required'; if(!formState.role_id) e.role_id='Required'; return e; }
+
+      async function submit(){ const v=validate(); setErrors(v); if(Object.keys(v).length) return; setApiError(''); if(editingUser){ setLoading(l=>({...l,updating:true})); try{ const u=await api.updateUser(editingUser.user_id,{...formState,role_id:parseInt(formState.role_id)}); setUsers(us=>us.map(x=>x.user_id===u.user_id?u:x)); setEditingUser(null); setFormState({}); } catch(e){ setApiError(e.message);} finally{ setLoading(l=>({...l,updating:false})); } } else { setLoading(l=>({...l,creating:true})); try{ const nu=await api.createUser({...formState,role_id:parseInt(formState.role_id)}); setUsers(us=>[...us,nu]); setFormState({}); } catch(e){ setApiError(e.message);} finally{ setLoading(l=>({...l,creating:false})); } } }
+
+      function edit(u){ setEditingUser(u); setFormState(u); window.scrollTo({top:0,behavior:'smooth'}); }
+      async function del(u){ if(!confirm('Delete user?')) return; setLoading(l=>({...l,deleting:true})); try{ await api.deleteUser(u.user_id); setUsers(us=>us.filter(x=>x.user_id!==u.user_id)); if(editingUser && editingUser.user_id===u.user_id){ setEditingUser(null); setFormState({}); }} catch(e){ setApiError(e.message);} finally{ setLoading(l=>({...l,deleting:false})); } }
+      async function addTask(ev){ ev.preventDefault(); if(!taskRoleId){ setApiError('Select a role for the new task'); return; } if(!taskName.trim()){ setApiError('Task name required'); return; } setApiError(''); setLoading(l=>({...l,creatingTask:true})); try{ await api.createRoleTask(taskRoleId,{task_name:taskName.trim()}); setTaskName(''); const tasks = await api.getRoleTasks(taskRoleId); setRoleTasks(tasks); } catch(e){ setApiError(e.message);} finally{ setLoading(l=>({...l,creatingTask:false})); } }
+
+      function startEditTask(t){ setEditingTaskId(t.task_id); setEditingTaskDesc(t.task_description || t.task_name || ''); setEditingTaskTimeline(t.completion_timeline || new Date().toISOString().slice(0,10)); }
+      function cancelEditTask(){ setEditingTaskId(null); setEditingTaskDesc(''); setEditingTaskTimeline(''); }
+      async function saveTask(){
+        if(!editingTaskDesc.trim()){ setApiError('Task description required'); return; }
+        if(!editingTaskTimeline.match(/^\d{4}-\d{2}-\d{2}$/)){ setApiError('Timeline must be YYYY-MM-DD'); return; }
+        setApiError('');
+        setLoading(l=>({...l,updatingTask:true}));
+        try {
+          await api.updateTask(editingTaskId,{ role_id: taskRoleId, task_description: editingTaskDesc.trim(), completion_timeline: editingTaskTimeline });
+          const tasks = await api.getRoleTasks(taskRoleId); setRoleTasks(tasks); cancelEditTask();
+        } catch(e){ setApiError(e.message); }
+        finally { setLoading(l=>({...l,updatingTask:false})); }
+      }
+
+      function startEditRole(r){ setEditingRoleId(r.role_id); setEditingRoleName(r.role_name); }
+      function cancelEditRole(){ setEditingRoleId(null); setEditingRoleName(''); }
+      async function saveRole(){
+        if(!editingRoleName.trim()){ setApiError('Role name cannot be empty'); return; }
+        setApiError('');
+        setLoading(l=>({...l,updating:true}));
+        try {
+          const updated = await api.updateRole(editingRoleId,{role_name:editingRoleName.trim()});
+          setRoles(rs=> rs.map(r=> r.role_id===updated.role_id ? updated : r));
+          cancelEditRole();
+        } catch(e){ setApiError(e.message); }
+        finally { setLoading(l=>({...l,updating:false})); }
+      }
+
+      const filtered = filterRole ? users.filter(u=> String(u.role_id)===String(filterRole)) : users;
+      const welcomeName = users.length ? users[users.length-1].first_name : '';
+
+      const stats = [
+        { label:'Users', value: users.length, onClick:()=>setPage('Users'), icon:e('svg',{className:'w-7 h-7 text-gray-400',fill:'none',stroke:'currentColor',strokeWidth:1.5,viewBox:'0 0 24 24'}, e('path',{strokeLinecap:'round',strokeLinejoin:'round', d:'M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 21a7.5 7.5 0 0115 0v.75a.75.75 0 01-.75.75h-13.5a.75.75 0 01-.75-.75V21z'})) },
+        { label:'Roles', value: roles.length, onClick:()=>setPage('Roles'), icon:e('svg',{className:'w-7 h-7 text-gray-400',fill:'none',stroke:'currentColor',strokeWidth:1.5,viewBox:'0 0 24 24'}, e('path',{strokeLinecap:'round',strokeLinejoin:'round', d:'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9'}) ) }
+      ];
+
+      return e('div',{className:'min-h-screen flex flex-col'},
+        e('header',{className:'bg-white border-b px-4 py-3 flex items-center justify-between'},
+          e('div',{className:'font-bold tracking-wide text-lg'},'WaffleTech'),
+          e('nav',{className:'flex gap-4 text-sm'},
+            ['Dashboard','Users'].map(p=> e('button',{key:p,onClick:()=>setPage(p), className: (page===p?'text-black font-semibold':'text-gray-500 hover:text-black')}, p))
+          )
+        ),
+        apiError && e('div',{className:'mx-4 mt-4 bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded'}, apiError),
+        e('main',{className:'flex-1 px-4 py-6 space-y-8 max-w-6xl mx-auto w-full'},
+          e('section',{className:'text-center space-y-3'},
+            e('h1',{className:'text-4xl font-light'}, 'Welcome to Waffle Suite!'),
+            e('p',{className:'text-gray-600'},'Streamline team onboarding with role-based workflows & automation.'),
+            e('p',{className:'text-gray-500 text-sm'},'Select a role to tailor training and track progress.')
+          ),
+          page==='Dashboard' && e('section',{className:'grid grid-cols-1 sm:grid-cols-2 gap-4'},
+            stats.map(s=> e(StatCard,{key:s.label,...s}))
+          ),
+          page==='Dashboard' && e('section',{className:'grid grid-cols-1 md:grid-cols-3 gap-8'},
+            // Column 1: Add Role
+            e('div',{className:'bg-white shadow rounded-xl p-5 space-y-4'},
+              e('h2',{className:'font-semibold text-lg'},'Add Role'),
+              e('form',{
+                className:'flex gap-3',
+                onSubmit: async ev => {
+                  ev.preventDefault();
+                  const fd = new FormData(ev.target);
+                  const name = fd.get('role_name');
+                  if(!name || !name.trim()) { setApiError('Role name required'); return; }
+                  setLoading(l=>({...l,creating:true}));
+                  setApiError('');
+                  try {
+                    const nr = await api.createRole({role_name:name.trim()});
+                    setRoles(r=>[...r,nr]);
+                    ev.target.reset();
+                  } catch(e){ setApiError(e.message); }
+                  finally { setLoading(l=>({...l,creating:false})); }
+                }
+              },
+                e('input',{name:'role_name', placeholder:'e.g. Engineer', className:'flex-1 border rounded px-2 py-1'}),
+                e('button',{type:'submit', disabled:loading.creating, className:'bg-black text-white px-4 py-1 rounded disabled:opacity-50'}, loading.creating ? 'Adding...' : 'Add')
+              )
+            ),
+            // Column 2: Quick Add User
+            e('div',{className:'bg-white shadow rounded-xl p-5'},
+              e('h2',{className:'font-semibold text-lg mb-4'}, editingUser ? 'Edit User' : 'Quick Add User'),
+              e(OnboardingForm,{roles,formState,setFormState,onSubmit:submit,loading,editing:!!editingUser,errors})
+            ),
+            // Column 3: Tasks per Role
+            e('div',{className:'bg-white shadow rounded-xl p-5 space-y-4'},
+              e('h2',{className:'font-semibold text-lg flex items-center justify-between'},
+                'Role Tasks',
+                taskRoleId && e('span',{className:'text-xs font-normal text-gray-500'},
+                  loading.loadingTasks ? 'Loading...' : `${roleTasks.length} task${roleTasks.length!==1 ? 's' : ''}`
+                )
+              ),
+              e('div',{className:'space-y-2'},
+                e('label',{className:'block text-xs font-medium text-gray-600'},'Select Role'),
+                e('select',{
+                  className:'w-full border rounded px-2 py-1',
+                  value:taskRoleId,
+                  onChange:ev=>{ const v=ev.target.value; setTaskRoleId(v); fetchTasks(v); }
+                },
+                  e('option',{value:''},'Choose a role'),
+                  roles.map(r=> e('option',{key:r.role_id,value:r.role_id}, r.role_name))
+                )
+              ),
+              taskRoleId && e('ul',{className:'text-xs space-y-1 max-h-48 overflow-auto pr-1 border rounded p-2 bg-gray-50'},
+                loading.loadingTasks
+                  ? e('li',{className:'italic text-gray-400'},'Loading tasks...')
+                  : (roleTasks.length
+                      ? roleTasks.map(t=> e('li',{key:t.task_id || `${t.role_id}-${t.task_description || t.task_name}` ,className:'flex flex-col gap-1 border rounded px-2 py-1 bg-white'},
+                          editingTaskId===t.task_id
+                            ? e('div',{className:'space-y-1'},
+                                e('input',{className:'w-full border rounded px-2 py-1',value:editingTaskDesc,onChange:ev=>setEditingTaskDesc(ev.target.value), disabled:loading.updatingTask}),
+                                e('input',{type:'date',className:'w-full border rounded px-2 py-1',value:editingTaskTimeline,onChange:ev=>setEditingTaskTimeline(ev.target.value), disabled:loading.updatingTask}),
+                                e('div',{className:'flex gap-2 justify-end'},
+                                  e('button',{className:'text-xs px-3 py-1 rounded border',type:'button',onClick:cancelEditTask,disabled:loading.updatingTask},'Cancel'),
+                                  e('button',{className:'text-xs px-3 py-1 rounded bg-black text-white disabled:opacity-50',type:'button',onClick:saveTask,disabled:loading.updatingTask}, loading.updatingTask ? 'Saving...' : 'Save')
+                                )
+                              )
+                            : e('div',{className:'flex items-start gap-2'},
+                                e('span',{className:'text-green-600 mt-0.5'},'•'),
+                                e('span',{className:'flex-1'}, t.task_name || t.task_description || t.name || 'Unnamed task'),
+                                e('span',{className:'text-[10px] text-gray-400'}, t.completion_timeline ),
+                                e('button',{className:'text-[10px] px-2 py-0.5 rounded border hover:bg-gray-50',type:'button',onClick:()=>startEditTask(t)},'Edit')
+                              )
+                        ))
+                      : e('li',{className:'italic text-gray-400'},'No tasks yet')
+                    )
+              ),
+              e('form',{className:'flex gap-2', onSubmit:addTask},
+                e('input',{
+                  type:'text',
+                  placeholder:'New task name',
+                  className:'flex-1 border rounded px-2 py-1',
+                  value:taskName,
+                  onChange:ev=>setTaskName(ev.target.value),
+                  disabled:!taskRoleId || loading.creatingTask
+                }),
+                e('button',{
+                  type:'submit',
+                  disabled:!taskRoleId || loading.creatingTask,
+                  className:'bg-black text-white px-3 py-1 rounded text-sm disabled:opacity-40'
+                }, loading.creatingTask ? 'Adding...' : 'Add')
+              ),
+              !taskRoleId && e('p',{className:'text-xs text-gray-400'},'Select a role to view & add tasks.')
+            )
+          ),
+          page==='Users' && e('section',{className:'space-y-6'},
+            e('div',{className:'flex flex-wrap gap-3 items-end'},
+              e('div',null,
+                e('label',{className:'block text-xs font-medium text-gray-600 mb-1'},'Filter by role'),
+                e('select',{className:'border rounded px-2 py-1', value:filterRole, onChange:ev=>setFilterRole(ev.target.value)},
+                  e('option',{value:''},'All Roles'),
+                  roles.map(r=> e('option',{key:r.role_id,value:r.role_id}, r.role_name))
+                )
+              ),
+              e('div',null,
+                e('button',{className:'text-sm underline text-gray-500 hover:text-black', onClick:()=>{setFilterRole('');}},'Reset')
+              )
+            ),
+            editingUser && e('div',{className:'bg-white border rounded-xl p-5'},
+              e('h2',{className:'font-semibold text-lg mb-4'},`Editing: ${editingUser.first_name} ${editingUser.last_name}`),
+              e(OnboardingForm,{roles,formState,setFormState,onSubmit:submit,loading,editing:!!editingUser,errors})
+            ),
+            e(UsersTable,{users:filtered,roles,onEdit:edit,onDelete:del,loading:loading.users || loading.deleting})
+          )
+          ,
+          page==='Roles' && e('section',{className:'space-y-4'},
+            e('div',{className:'flex items-center justify-between'},
+              e('h2',{className:'text-lg font-semibold'},'Roles'),
+              e('button',{className:'text-sm text-gray-500 hover:text-black underline',onClick:()=>setPage('Dashboard')},'Back to Dashboard')
+            ),
+            roles.length ? e('ul',{className:'divide-y rounded-xl border bg-white'},
+              roles.map(r=> e('li',{key:r.role_id,className:'flex items-center justify-between px-4 py-3'},
+                e('div',{className:'flex-1 min-w-0 pr-4'},
+                  editingRoleId===r.role_id
+                    ? e('input',{className:'border rounded px-2 py-1 w-full text-sm', value:editingRoleName, onChange:ev=>setEditingRoleName(ev.target.value)})
+                    : e('p',{className:'font-medium truncate'}, r.role_name),
+                  e('p',{className:'text-xs text-gray-500 mt-0.5'}, `ID: ${r.role_id}`)
+                ),
+                e('div',{className:'flex gap-2 flex-shrink-0'},
+                  editingRoleId===r.role_id
+                    ? [
+                        e('button',{key:'save',className:'text-xs px-3 py-1 rounded bg-black text-white disabled:opacity-50',disabled:loading.updating,onClick:saveRole}, loading.updating? 'Saving...' : 'Save'),
+                        e('button',{key:'cancel',className:'text-xs px-3 py-1 rounded border',onClick:cancelEditRole},'Cancel')
+                      ]
+                    : [
+                        e('button',{key:'tasks',className:'text-xs px-3 py-1 rounded border hover:bg-gray-50',onClick:()=>{setTaskRoleId(r.role_id); setPage('Dashboard');}},'View Tasks'),
+                        e('button',{key:'edit',className:'text-xs px-3 py-1 rounded border hover:bg-gray-50',onClick:()=>startEditRole(r)},'Edit')
+                      ]
+                )
+              ))
+            ) : e('p',{className:'text-sm text-gray-500 italic'},'No roles yet — add one on the Dashboard.')
+          )
+        ),
+        e('footer',{className:'mt-12 py-6 text-center text-xs text-gray-500'}, `© ${new Date().getFullYear()} WaffleTech Industries`)
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(e(App));
+  </script>
+</body>
+</html>
